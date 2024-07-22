@@ -89,6 +89,22 @@ class Stack_D0(Stack, SingleArmEnv_MG):
         # Add camera with full tabletop perspective
         self._add_agentview_full_camera(mujoco_arena)
 
+        # Set default agentview camera to be "agentview_full" (and send old agentview camera to agentview_full)
+        old_agentview_camera = find_elements(root=mujoco_arena.worldbody, tags="camera", attribs={"name": "agentview"}, return_first=True)
+        old_agentview_camera_pose = (old_agentview_camera.get("pos"), old_agentview_camera.get("quat"))
+        old_agentview_full_camera = find_elements(root=mujoco_arena.worldbody, tags="camera", attribs={"name": "agentview_full"}, return_first=True)
+        old_agentview_full_camera_pose = (old_agentview_full_camera.get("pos"), old_agentview_full_camera.get("quat"))
+        mujoco_arena.set_camera(
+            camera_name="agentview",
+            pos=string_to_array(old_agentview_full_camera_pose[0]),
+            quat=string_to_array(old_agentview_full_camera_pose[1]),
+        )
+        mujoco_arena.set_camera(
+            camera_name="agentview_full",
+            pos=string_to_array(old_agentview_camera_pose[0]),
+            quat=string_to_array(old_agentview_camera_pose[1]),
+        )
+        
         return mujoco_arena
 
     def _load_model(self):
@@ -516,20 +532,21 @@ class StackThree_D1(StackThree_D0):
         mujoco_arena = super()._load_arena()
 
         # Set default agentview camera to be "agentview_full" (and send old agentview camera to agentview_full)
-        old_agentview_camera = find_elements(root=mujoco_arena.worldbody, tags="camera", attribs={"name": "agentview"}, return_first=True)
-        old_agentview_camera_pose = (old_agentview_camera.get("pos"), old_agentview_camera.get("quat"))
-        old_agentview_full_camera = find_elements(root=mujoco_arena.worldbody, tags="camera", attribs={"name": "agentview_full"}, return_first=True)
-        old_agentview_full_camera_pose = (old_agentview_full_camera.get("pos"), old_agentview_full_camera.get("quat"))
-        mujoco_arena.set_camera(
-            camera_name="agentview",
-            pos=string_to_array(old_agentview_full_camera_pose[0]),
-            quat=string_to_array(old_agentview_full_camera_pose[1]),
-        )
-        mujoco_arena.set_camera(
-            camera_name="agentview_full",
-            pos=string_to_array(old_agentview_camera_pose[0]),
-            quat=string_to_array(old_agentview_camera_pose[1]),
-        )
+        for view in ['agentview']: #, 'frontview']:
+            old_agentview_camera = find_elements(root=mujoco_arena.worldbody, tags="camera", attribs={"name": view}, return_first=True)
+            old_agentview_camera_pose = (old_agentview_camera.get("pos"), old_agentview_camera.get("quat"))
+            old_agentview_full_camera = find_elements(root=mujoco_arena.worldbody, tags="camera", attribs={"name": f"{view}_full"}, return_first=True)
+            old_agentview_full_camera_pose = (old_agentview_full_camera.get("pos"), old_agentview_full_camera.get("quat"))
+            mujoco_arena.set_camera(
+                camera_name=view,
+                pos=string_to_array(old_agentview_full_camera_pose[0]),
+                quat=string_to_array(old_agentview_full_camera_pose[1]),
+            )
+            mujoco_arena.set_camera(
+                camera_name=f"{view}_full",
+                pos=string_to_array(old_agentview_camera_pose[0]),
+                quat=string_to_array(old_agentview_camera_pose[1]),
+            )
 
         return mujoco_arena
 

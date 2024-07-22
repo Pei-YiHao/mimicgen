@@ -554,6 +554,7 @@ def main(args):
     # catch error during generation and print it
     res_str = "finished run successfully!"
     important_stats = None
+    had_error = False
     try:
         important_stats = generate_dataset(
             mg_config=mg_config,
@@ -566,12 +567,15 @@ def main(args):
         )
     except Exception as e:
         res_str = "run failed with error:\n{}\n\n{}".format(e, traceback.format_exc())
+        had_error = True
     print(res_str)
     if important_stats is not None:
         important_stats = json.dumps(important_stats, indent=4)
         print("\nFinal Data Generation Stats")
         print(important_stats)
 
+    if had_error:
+        raise Exception(f"process failed with error {res_str}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

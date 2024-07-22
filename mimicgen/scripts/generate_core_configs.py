@@ -13,6 +13,8 @@ See https://robomimic.github.io/docs/tutorials/hyperparam_scan.html for more inf
 import os
 import json
 import shutil
+import pprint
+import subprocess
 
 import robomimic
 from robomimic.utils.hyperparam_utils import ConfigGenerator
@@ -22,17 +24,21 @@ import mimicgen.utils.config_utils as ConfigUtils
 from mimicgen.utils.file_utils import config_generator_to_script_lines
 
 
+# camera settings for collecting observations
+CAMERA_NAMES = ["frontview", "robot0_eye_in_hand"]
+CAMERA_SIZE = (512, 512)
+
 # set path to folder containing src datasets
-SRC_DATA_DIR = os.path.join(mimicgen.__path__[0], "../datasets/source")
+SRC_DATA_DIR = f"/data/datasets/mimicgen/source" #os.path.join(mimicgen.__path__[0], "../datasets/source")
 
 # set base folder for where to copy each base config and generate new config files for data generation
-CONFIG_DIR = "/tmp/core_configs"
+CONFIG_DIR = f"/data/datasets/mimicgen/core_hd/{CAMERA_SIZE[1]}/config" #"/tmp/core_configs"
 
 # set base folder for newly generated datasets
-OUTPUT_FOLDER = "/tmp/core_datasets"
+OUTPUT_FOLDER = f"/data/datasets/mimicgen/core_hd/{CAMERA_SIZE[1]}" #"/tmp/core_datasets"
 
 # number of trajectories to generate (or attempt to generate)
-NUM_TRAJ = 1000
+NUM_TRAJ = 100
 
 # whether to guarantee that many successful trajectories (e.g. keep running until that many successes, or stop at that many attempts)
 GUARANTEE = True
@@ -40,9 +46,8 @@ GUARANTEE = True
 # whether to run a quick debug run instead of full generation
 DEBUG = False
 
-# camera settings for collecting observations
-CAMERA_NAMES = ["agentview", "robot0_eye_in_hand"]
-CAMERA_SIZE = (84, 84)
+TASKS = ["stack"] #["stack", "square"]
+RUN = True
 
 # path to base config(s)
 BASE_BASE_CONFIG_PATH = os.path.join(mimicgen.__path__[0], "exps/templates/robosuite")
@@ -61,6 +66,15 @@ BASE_CONFIGS = [
     os.path.join(BASE_BASE_CONFIG_PATH, "kitchen.json"),
 ]
 
+def filter_base(x):
+    for t in TASKS:
+        if t == os.path.splitext(os.path.basename(x))[0]:
+            return
+    BASE_CONFIGS.remove(x)
+            
+for x in BASE_CONFIGS.copy():
+    filter_base(x)
+            
 
 def make_generators(base_configs):
     """
@@ -74,8 +88,8 @@ def make_generators(base_configs):
             dataset_name="stack",
             generation_path="{}/stack".format(OUTPUT_FOLDER),
             # task_interface="MG_Stack",
-            tasks=["Stack_D0", "Stack_D1"],
-            task_names=["D0", "D1"],
+            tasks=["Stack_D1"], #["Stack_D0"],# 
+            task_names=["D1"],# "D0"],
             select_src_per_subtask=True,
             selection_strategy="nearest_neighbor_object",
             selection_strategy_kwargs=dict(nn_k=3),
@@ -87,8 +101,8 @@ def make_generators(base_configs):
             dataset_name="stack_three",
             generation_path="{}/stack_three".format(OUTPUT_FOLDER),
             # task_interface="MG_StackThree",
-            tasks=["StackThree_D0", "StackThree_D1"],
-            task_names=["D0", "D1"],
+            tasks=["StackThree_D1"],#["StackThree_D0", "StackThree_D1"],
+            task_names=["D1"],#["D0", "D1"],
             select_src_per_subtask=True,
             selection_strategy="nearest_neighbor_object",
             selection_strategy_kwargs=dict(nn_k=3),
@@ -227,6 +241,18 @@ def make_generators(base_configs):
         ),
     ]
 
+    def filter_settings(x):
+        for t in TASKS:
+            if t == x['dataset_name']:
+                return
+        all_settings.remove(x)
+
+    for x in all_settings.copy():
+        filter_settings(x)
+    
+    pprint.pprint(base_configs)
+    pprint.pprint(all_settings)
+    
     assert len(base_configs) == len(all_settings)
     ret = []
     for conf, setting in zip(base_configs, all_settings):
@@ -362,7 +388,7 @@ def main():
 
     real_run_lines = []
     for line in run_lines:
-        line = line.strip().replace("train.py", "generate_dataset.py")
+        line = line.strip().replace("train.py", "-m mimicgen.scripts.generate_dataset").replace("python", "python3")
         line += " --auto-remove-exp"
         real_run_lines.append(line)
     run_lines = real_run_lines
@@ -372,6 +398,10 @@ def main():
     print("runs")
     print(json.dumps(run_lines, indent=4))
 
-
+    if RUN:
+        for run in run_lines:
+            print(f"\n\n\nRUNNING:  {run}\n\n")
+            subprocess.run(run, shell=True, check=True)
+            
 if __name__ == "__main__":
     main()

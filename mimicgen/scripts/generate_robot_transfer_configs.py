@@ -24,16 +24,16 @@ from mimicgen.utils.file_utils import config_generator_to_script_lines
 
 
 # set path to folder containing src datasets
-SRC_DATA_DIR = os.path.join(mimicgen.__path__[0], "../datasets/source")
+SRC_DATA_DIR = "/data/datasets/mimicgen/source" #os.path.join(mimicgen.__path__[0], "../datasets/source")
 
 # set base folder for where to copy each base config and generate new config files for data generation
-CONFIG_DIR = "/tmp/robot_configs"
+CONFIG_DIR = "/data/datasets/mimicgen/highres/config" #"/tmp/robot_configs"
 
 # set base folder for newly generated datasets
-OUTPUT_FOLDER = "/tmp/robot_datasets"
+OUTPUT_FOLDER = "/data/datasets/mimicgen/highres" #"/tmp/robot_datasets"
 
 # number of trajectories to generate (or attempt to generate)
-NUM_TRAJ = 1000
+NUM_TRAJ = 150 #1000
 
 # whether to guarantee that many successful trajectories (e.g. keep running until that many successes, or stop at that many attempts)
 GUARANTEE = True
@@ -43,13 +43,13 @@ DEBUG = False
 
 # camera settings for collecting observations
 CAMERA_NAMES = ["agentview", "robot0_eye_in_hand"]
-CAMERA_SIZE = (84, 84)
+CAMERA_SIZE = (512,512) #(84, 84)
 
 # path to base config(s)
 BASE_BASE_CONFIG_PATH = os.path.join(mimicgen.__path__[0], "exps/templates/robosuite")
 BASE_CONFIGS = [
     os.path.join(BASE_BASE_CONFIG_PATH, "square.json"),
-    os.path.join(BASE_BASE_CONFIG_PATH, "threading.json"),
+    #os.path.join(BASE_BASE_CONFIG_PATH, "threading.json"),
 ]
 
 
@@ -64,9 +64,9 @@ def make_generators(base_configs):
             dataset_path=os.path.join(SRC_DATA_DIR, "square.hdf5"),
             dataset_name="square",
             generation_path="{}/square".format(OUTPUT_FOLDER),
-            tasks=["Square_D0", "Square_D1"],
-            task_names=["D0", "D1"],
-            robots=["Sawyer", "IIWA", "UR5e"],
+            tasks=["Square_D0"], #["Square_D0", "Square_D1"],
+            task_names=["D0"], #["D0", "D1"],
+            robots=["Panda"], #["Sawyer", "IIWA", "UR5e"],
             grippers=["RethinkGripper", "Robotiq85Gripper", "Robotiq85Gripper"],
             select_src_per_subtask=False,
             selection_strategy="nearest_neighbor_object",
@@ -86,9 +86,14 @@ def make_generators(base_configs):
             selection_strategy="random",
             selection_strategy_kwargs=None,
             subtask_term_offset_range=[[5, 10], None],
-        ),
+        )
     ]
-
+    
+    all_settings = all_settings[:len(base_configs)]  # dusty:  disable threading.hdf5
+    
+    #print(base_configs, len(base_configs))
+    #print(all_settings, len(all_settings))
+    
     assert len(base_configs) == len(all_settings)
     ret = []
     for conf, setting in zip(base_configs, all_settings):

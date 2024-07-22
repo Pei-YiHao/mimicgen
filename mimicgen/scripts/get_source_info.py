@@ -25,12 +25,15 @@ if __name__ == "__main__":
     dataset_path = args.dataset
 
     # get first demonstration
-    first_demo_key = MG_FileUtils.get_all_demos_from_dataset(
+    demo_keys = MG_FileUtils.get_all_demos_from_dataset(
         dataset_path=dataset_path,
         filter_key=None,
         start=None,
-        n=1,
-    )[0]
+        #n=1,
+    )
+    print('DEMO KEYS', demo_keys)
+    first_demo_key = demo_keys[0]
+    print('FIRST DEMO KEY', first_demo_key)
     f = h5py.File(dataset_path, "r")
     ep_grp = f["data/{}".format(first_demo_key)]
 
