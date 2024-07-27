@@ -46,8 +46,8 @@ GUARANTEE = True
 # whether to run a quick debug run instead of full generation
 DEBUG = False
 
-TASKS = ["stack"] #["stack", "square"]
-RUN = True
+#TASKS = ["stack"] #["stack", "square"]
+RUN = False
 
 # path to base config(s)
 BASE_BASE_CONFIG_PATH = os.path.join(mimicgen.__path__[0], "exps/templates/robosuite")
@@ -66,6 +66,7 @@ BASE_CONFIGS = [
     os.path.join(BASE_BASE_CONFIG_PATH, "kitchen.json"),
 ]
 
+'''
 def filter_base(x):
     for t in TASKS:
         if t == os.path.splitext(os.path.basename(x))[0]:
@@ -74,9 +75,21 @@ def filter_base(x):
             
 for x in BASE_CONFIGS.copy():
     filter_base(x)
-            
+'''  
 
-def make_generators(base_configs):
+def get_task_names():         
+    tasks = []
+    datasets = make_generators(return_configs=True)
+    
+    for dataset in datasets:
+        for task in dataset['tasks']:
+            tasks.append(task)
+            
+    return tasks
+    
+    
+def make_generators(base_configs=BASE_CONFIGS, src_data_dir=SRC_DATA_DIR, 
+                    output_folder=OUTPUT_FOLDER, return_configs=False, **kwargs):
     """
     An easy way to make multiple config generators by using different 
     settings for each.
@@ -84,12 +97,12 @@ def make_generators(base_configs):
     all_settings = [
         # stack
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "stack.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "stack.hdf5"),
             dataset_name="stack",
-            generation_path="{}/stack".format(OUTPUT_FOLDER),
+            generation_path="{}/stack".format(output_folder),
             # task_interface="MG_Stack",
-            tasks=["Stack_D1"], #["Stack_D0"],# 
-            task_names=["D1"],# "D0"],
+            tasks=["Stack_D0", "Stack_D1"], 
+            task_names=["D0", "D1"],
             select_src_per_subtask=True,
             selection_strategy="nearest_neighbor_object",
             selection_strategy_kwargs=dict(nn_k=3),
@@ -97,12 +110,12 @@ def make_generators(base_configs):
         ),
         # stack_three
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "stack_three.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "stack_three.hdf5"),
             dataset_name="stack_three",
-            generation_path="{}/stack_three".format(OUTPUT_FOLDER),
+            generation_path="{}/stack_three".format(output_folder),
             # task_interface="MG_StackThree",
-            tasks=["StackThree_D1"],#["StackThree_D0", "StackThree_D1"],
-            task_names=["D1"],#["D0", "D1"],
+            tasks=["StackThree_D0", "StackThree_D1"],
+            task_names=["D0", "D1"],
             select_src_per_subtask=True,
             selection_strategy="nearest_neighbor_object",
             selection_strategy_kwargs=dict(nn_k=3),
@@ -110,9 +123,9 @@ def make_generators(base_configs):
         ),
         # square
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "square.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "square.hdf5"),
             dataset_name="square",
-            generation_path="{}/square".format(OUTPUT_FOLDER),
+            generation_path="{}/square".format(output_folder),
             # task_interface="MG_Square",
             tasks=["Square_D0", "Square_D1", "Square_D2"],
             task_names=["D0", "D1", "D2"],
@@ -123,9 +136,9 @@ def make_generators(base_configs):
         ),
         # threading
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "threading.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "threading.hdf5"),
             dataset_name="threading",
-            generation_path="{}/threading".format(OUTPUT_FOLDER),
+            generation_path="{}/threading".format(output_folder),
             # task_interface="MG_Threading",
             tasks=["Threading_D0", "Threading_D1", "Threading_D2"],
             task_names=["D0", "D1", "D2"],
@@ -136,9 +149,9 @@ def make_generators(base_configs):
         ),
         # three_piece_assembly
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "three_piece_assembly.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "three_piece_assembly.hdf5"),
             dataset_name="three_piece_assembly",
-            generation_path="{}/three_piece_assembly".format(OUTPUT_FOLDER),
+            generation_path="{}/three_piece_assembly".format(output_folder),
             # task_interface="MG_ThreePieceAssembly",
             tasks=["ThreePieceAssembly_D0", "ThreePieceAssembly_D1", "ThreePieceAssembly_D2"],
             task_names=["D0", "D1", "D2"],
@@ -149,9 +162,9 @@ def make_generators(base_configs):
         ),
         # coffee
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "coffee.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "coffee.hdf5"),
             dataset_name="coffee",
-            generation_path="{}/coffee".format(OUTPUT_FOLDER),
+            generation_path="{}/coffee".format(output_folder),
             # task_interface="MG_Coffee",
             tasks=["Coffee_D0", "Coffee_D1", "Coffee_D2"],
             task_names=["D0", "D1", "D2"],
@@ -162,9 +175,9 @@ def make_generators(base_configs):
         ),
         # coffee_preparation
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "coffee_preparation.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "coffee_preparation.hdf5"),
             dataset_name="coffee_preparation",
-            generation_path="{}/coffee_preparation".format(OUTPUT_FOLDER),
+            generation_path="{}/coffee_preparation".format(output_folder),
             # task_interface="MG_CoffeePreparation",
             tasks=["CoffeePreparation_D0", "CoffeePreparation_D1"],
             task_names=["D0", "D1"],
@@ -175,9 +188,9 @@ def make_generators(base_configs):
         ),
         # nut_assembly
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "nut_assembly.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "nut_assembly.hdf5"),
             dataset_name="nut_assembly",
-            generation_path="{}/nut_assembly".format(OUTPUT_FOLDER),
+            generation_path="{}/nut_assembly".format(output_folder),
             # task_interface="MG_NutAssembly",
             tasks=["NutAssembly_D0"],
             task_names=["D0"],
@@ -188,9 +201,9 @@ def make_generators(base_configs):
         ),
         # pick_place
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "pick_place.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "pick_place.hdf5"),
             dataset_name="pick_place",
-            generation_path="{}/pick_place".format(OUTPUT_FOLDER),
+            generation_path="{}/pick_place".format(output_folder),
             # task_interface="MG_PickPlace",
             tasks=["PickPlace_D0"],
             task_names=["D0"],
@@ -202,9 +215,9 @@ def make_generators(base_configs):
         ),
         # hammer_cleanup
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "hammer_cleanup.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "hammer_cleanup.hdf5"),
             dataset_name="hammer_cleanup",
-            generation_path="{}/hammer_cleanup".format(OUTPUT_FOLDER),
+            generation_path="{}/hammer_cleanup".format(output_folder),
             # task_interface="MG_HammerCleanup",
             tasks=["HammerCleanup_D0", "HammerCleanup_D1"],
             task_names=["D0", "D1"],
@@ -215,9 +228,9 @@ def make_generators(base_configs):
         ),
         # mug_cleanup
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "mug_cleanup.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "mug_cleanup.hdf5"),
             dataset_name="mug_cleanup",
-            generation_path="{}/mug_cleanup".format(OUTPUT_FOLDER),
+            generation_path="{}/mug_cleanup".format(output_folder),
             # task_interface="MG_MugCleanup",
             tasks=["MugCleanup_D0", "MugCleanup_D1", "MugCleanup_O1", "MugCleanup_O2"],
             task_names=["D0", "D1", "O1", "O2"],
@@ -228,9 +241,9 @@ def make_generators(base_configs):
         ),
         # kitchen
         dict(
-            dataset_path=os.path.join(SRC_DATA_DIR, "kitchen.hdf5"),
+            dataset_path=os.path.join(src_data_dir, "kitchen.hdf5"),
             dataset_name="kitchen",
-            generation_path="{}/kitchen".format(OUTPUT_FOLDER),
+            generation_path="{}/kitchen".format(output_folder),
             # task_interface="MG_Kitchen",
             tasks=["Kitchen_D0", "Kitchen_D1"],
             task_names=["D0", "D1"],
@@ -241,6 +254,10 @@ def make_generators(base_configs):
         ),
     ]
 
+    if return_configs:
+        return all_settings
+        
+    '''
     def filter_settings(x):
         for t in TASKS:
             if t == x['dataset_name']:
@@ -249,6 +266,7 @@ def make_generators(base_configs):
 
     for x in all_settings.copy():
         filter_settings(x)
+    '''
     
     pprint.pprint(base_configs)
     pprint.pprint(all_settings)
@@ -256,11 +274,13 @@ def make_generators(base_configs):
     assert len(base_configs) == len(all_settings)
     ret = []
     for conf, setting in zip(base_configs, all_settings):
-        ret.append(make_generator(os.path.expanduser(conf), setting))
+        ret.append(make_generator(os.path.expanduser(conf), setting, **kwargs))
     return ret
 
 
-def make_generator(config_file, settings):
+def make_generator(config_file, settings, num_traj=NUM_TRAJ, guarantee=GUARANTEE, 
+                   camera_names=CAMERA_NAMES, camera_width=CAMERA_SIZE[1], camera_height=CAMERA_SIZE[0], 
+                   debug=DEBUG, **kwargs):
     """
     Implement this function to setup your own hyperparameter scan. 
     Each config generator is created using a base config file (@config_file) 
@@ -279,8 +299,8 @@ def make_generator(config_file, settings):
         source_dataset_path=settings["dataset_path"],
         source_dataset_name=settings["dataset_name"],
         generation_path=settings["generation_path"],
-        guarantee=GUARANTEE,
-        num_traj=NUM_TRAJ,
+        guarantee=guarantee,
+        num_traj=num_traj,
         num_src_demos=10,
         max_num_failures=25,
         num_demo_to_render=10,
@@ -348,12 +368,12 @@ def make_generator(config_file, settings):
         generator=generator,
         group=-1,
         collect_obs=True,
-        camera_names=CAMERA_NAMES,
-        camera_height=CAMERA_SIZE[0],
-        camera_width=CAMERA_SIZE[1],
+        camera_names=camera_names,
+        camera_height=camera_height,
+        camera_width=camera_width,
     )
 
-    if DEBUG:
+    if debug:
         # set debug settings
         ConfigUtils.set_debug_settings(
             generator=generator,
