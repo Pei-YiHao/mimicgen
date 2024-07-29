@@ -15,11 +15,11 @@ from mimicgen.scripts.generate_core_configs import make_generator, make_generato
 
 DEFAULT_CACHE="/data/datasets/mimicgen"
 DEFAULT_OUTPUT=DEFAULT_CACHE + '/renders'
-DEFAULT_CAMERAS=["frontview", "robot0_eye_in_hand"]
+DEFAULT_CAMERAS=["agentview", "frontview", "robot0_eye_in_hand"]
 
 
 def generate(tasks=[], episodes=100, output=DEFAULT_OUTPUT, cache=DEFAULT_CACHE,
-             cameras=DEFAULT_CAMERAS, camera_width=512, camera_height=512, **kwargs):
+             cameras=DEFAULT_CAMERAS, camera_width=512, camera_height=512, parallel=-1, **kwargs):
     """
     Render episodes for the specified tasks with trajectories and images.
     """
@@ -68,6 +68,11 @@ def generate(tasks=[], episodes=100, output=DEFAULT_OUTPUT, cache=DEFAULT_CACHE,
     
     for i, line in enumerate(gen_commands):
         line = line.strip().replace("train.py", "-m mimicgen.scripts.generate_dataset").replace("python", "python3")
+        
+        if parallel is not None and parallel != 0:
+            line = line.replace('generate_dataset', 'generate_parallel')
+            line += f" --workers={parallel}"
+            
         line += " --auto-remove-exp"
         gen_commands[i] = line
 
@@ -125,6 +130,7 @@ def main():
 
     parser.add_argument('--cache', type=str, default=DEFAULT_CACHE, help="location where mimicgen datasets are stored")
     parser.add_argument('--output', type=str, default=DEFAULT_OUTPUT, help="output directory of the generated dataset (in HDF5 format)")
+    parser.add_argument('--parallel', type=int, default=None, help="the number of workers to run in parallel (-1 for all CPU cores, 0 for single-threaded)")
     parser.add_argument('--simulate', action='store_true', help="just print the commands, but don't actually run them")
     
     args = parser.parse_args()
