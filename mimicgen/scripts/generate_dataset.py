@@ -27,6 +27,7 @@ import os
 import shutil
 import json
 import time
+import tqdm
 import argparse
 import traceback
 import random
@@ -301,65 +302,45 @@ def generate_dataset(
     num_trials = mg_config.experiment.generation.num_trials
     guarantee_success = mg_config.experiment.generation.guarantee
 
-    while True:
+    with tqdm.tqdm(total=num_trials, leave=False) as progress:
+        while True:
+            # generate trajectory
+            try:
+                generated_traj = data_generator.generate(
+                    env=env,
+                    env_interface=env_interface,
+                    select_src_per_subtask=mg_config.experiment.generation.select_src_per_subtask,
+                    transform_first_robot_pose=mg_config.experiment.generation.transform_first_robot_pose,
+                    interpolate_from_last_target_pose=mg_config.experiment.generation.interpolate_from_last_target_pose,
+                    render=render,
+                    video_writer=video_writer,
+                    video_skip=video_skip,
+                    camera_names=render_image_names,
+                    pause_subtask=pause_subtask,
+                )
+            except exceptions_to_except as e:
+                # problematic trajectory - do not have this count towards our total number of attempts, and re-try
+                print("")
+                print("*" * 50)
+                print("WARNING: got rollout exception {}".format(e))
+                print("*" * 50)
+                print("")
+                num_problematic += 1
+                continue
 
-        # generate trajectory
-        try:
-            generated_traj = data_generator.generate(
-                env=env,
-                env_interface=env_interface,
-                select_src_per_subtask=mg_config.experiment.generation.select_src_per_subtask,
-                transform_first_robot_pose=mg_config.experiment.generation.transform_first_robot_pose,
-                interpolate_from_last_target_pose=mg_config.experiment.generation.interpolate_from_last_target_pose,
-                render=render,
-                video_writer=video_writer,
-                video_skip=video_skip,
-                camera_names=render_image_names,
-                pause_subtask=pause_subtask,
-            )
-        except exceptions_to_except as e:
-            # problematic trajectory - do not have this count towards our total number of attempts, and re-try
-            print("")
-            print("*" * 50)
-            print("WARNING: got rollout exception {}".format(e))
-            print("*" * 50)
-            print("")
-            num_problematic += 1
-            continue
+            # remember selection of source demos for each subtask
+            selected_src_demo_inds_all.append(generated_traj["src_demo_inds"])
 
-        # remember selection of source demos for each subtask
-        selected_src_demo_inds_all.append(generated_traj["src_demo_inds"])
+            # check if generated trajectory was successful
+            success = bool(generated_traj["success"])
 
-        # check if generated trajectory was successful
-        success = bool(generated_traj["success"])
+            if success:
+                num_success += 1
 
-        if success:
-            num_success += 1
-
-            # store successful demonstration
-            ep_lengths.append(generated_traj["actions"].shape[0])
-            MG_FileUtils.write_demo_to_hdf5(
-                folder=tmp_dataset_folder_path,
-                env=env,
-                initial_state=generated_traj["initial_state"],
-                states=generated_traj["states"],
-                observations=(generated_traj["observations"] if mg_config.obs.collect_obs else None),
-                datagen_info=generated_traj["datagen_infos"],
-                actions=generated_traj["actions"],
-                src_demo_inds=generated_traj["src_demo_inds"],
-                src_demo_labels=generated_traj["src_demo_labels"],
-            )
-            selected_src_demo_inds_succ.append(generated_traj["src_demo_inds"])
-        else:
-            num_failures += 1
-
-            # check if this failure should be kept
-            if mg_config.experiment.generation.keep_failed and \
-                (mg_config.experiment.max_num_failures is None) or (num_failures <= mg_config.experiment.max_num_failures):
-                
-                # save failed trajectory in separate folder
+                # store successful demonstration
+                ep_lengths.append(generated_traj["actions"].shape[0])
                 MG_FileUtils.write_demo_to_hdf5(
-                    folder=tmp_dataset_failed_folder_path,
+                    folder=tmp_dataset_folder_path,
                     env=env,
                     initial_state=generated_traj["initial_state"],
                     states=generated_traj["states"],
@@ -369,42 +350,70 @@ def generate_dataset(
                     src_demo_inds=generated_traj["src_demo_inds"],
                     src_demo_labels=generated_traj["src_demo_labels"],
                 )
+                selected_src_demo_inds_succ.append(generated_traj["src_demo_inds"])
+            else:
+                num_failures += 1
 
-        num_attempts += 1
-        print("")
-        print("*" * 50)
-        print("trial {} success: {}".format(num_attempts, success))
-        print("have {} successes out of {} trials so far".format(num_success, num_attempts))
-        print("have {} failures out of {} trials so far".format(num_failures, num_attempts))
-        print("*" * 50)
+                # check if this failure should be kept
+                if mg_config.experiment.generation.keep_failed and \
+                    (mg_config.experiment.max_num_failures is None) or (num_failures <= mg_config.experiment.max_num_failures):
+                    
+                    # save failed trajectory in separate folder
+                    MG_FileUtils.write_demo_to_hdf5(
+                        folder=tmp_dataset_failed_folder_path,
+                        env=env,
+                        initial_state=generated_traj["initial_state"],
+                        states=generated_traj["states"],
+                        observations=(generated_traj["observations"] if mg_config.obs.collect_obs else None),
+                        datagen_info=generated_traj["datagen_infos"],
+                        actions=generated_traj["actions"],
+                        src_demo_inds=generated_traj["src_demo_inds"],
+                        src_demo_labels=generated_traj["src_demo_labels"],
+                    )
 
-        # regularly log progress to disk every so often
-        if (num_attempts % mg_config.experiment.log_every_n_attempts) == 0:
+            num_attempts += 1
+            
+            '''
+            print("")
+            print("*" * 50)
+            print("trial {} success: {}".format(num_attempts, success))
+            print("have {} successes out of {} trials so far".format(num_success, num_attempts))
+            print("have {} failures out of {} trials so far".format(num_failures, num_attempts))
+            print("*" * 50)
+            '''
+            
+            progress.set_description(f"Generating episodes  success=[{num_success}/{num_attempts}]  failure=[{num_failures}/{num_attempts}]")
+            
+            if success:
+                progress.update()
+            
+            # regularly log progress to disk every so often
+            if (num_attempts % mg_config.experiment.log_every_n_attempts) == 0:
 
-            # get summary stats
-            summary_stats = get_important_stats(
-                new_dataset_folder_path=new_dataset_folder_path,
-                num_success=num_success,
-                num_failures=num_failures,
-                num_attempts=num_attempts,
-                num_problematic=num_problematic,
-                start_time=start_time,
-                ep_length_stats=None,
-            )
+                # get summary stats
+                summary_stats = get_important_stats(
+                    new_dataset_folder_path=new_dataset_folder_path,
+                    num_success=num_success,
+                    num_failures=num_failures,
+                    num_attempts=num_attempts,
+                    num_problematic=num_problematic,
+                    start_time=start_time,
+                    ep_length_stats=None,
+                )
 
-            # write stats to disk
-            max_digits = len(str(num_trials * 1000)) + 1 # assume we will never have lower than 0.1% data generation SR
-            json_file_path = os.path.join(json_log_path, "attempt_{}_succ_{}_rate_{}.json".format(
-                str(num_attempts).zfill(max_digits), # pad with leading zeros for ordered list of jsons in directory
-                num_success,
-                np.round((100. * num_success) / num_attempts, 2),
-            ))
-            MG_FileUtils.write_json(json_dic=summary_stats, json_path=json_file_path)
+                # write stats to disk
+                max_digits = len(str(num_trials * 1000)) + 1 # assume we will never have lower than 0.1% data generation SR
+                json_file_path = os.path.join(json_log_path, "attempt_{}_succ_{}_rate_{}.json".format(
+                    str(num_attempts).zfill(max_digits), # pad with leading zeros for ordered list of jsons in directory
+                    num_success,
+                    np.round((100. * num_success) / num_attempts, 2),
+                ))
+                MG_FileUtils.write_json(json_dic=summary_stats, json_path=json_file_path)
 
-        # termination condition is on enough successes if @guarantee_success or enough attempts otherwise
-        check_val = num_success if guarantee_success else num_attempts
-        if check_val >= num_trials:
-            break
+            # termination condition is on enough successes if @guarantee_success or enough attempts otherwise
+            check_val = num_success if guarantee_success else num_attempts
+            if check_val >= num_trials:
+                break
 
     if write_video:
         video_writer.close()
