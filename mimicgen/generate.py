@@ -86,6 +86,20 @@ def generate(tasks=[], episodes=100, output=DEFAULT_OUTPUT, cache=DEFAULT_CACHE,
         
     print(f"\nFinished generation of {episodes} episodes for {tasks}")
         
+ 
+def generate_instruction(task, env, shuffle=0):
+    """
+    Return a natural language prompt for the given task and environment.   
+    """
+    task = task.lower()
+    
+    if 'stack_three' in task:
+        return "stack the red block on top of the green block, and then the blue block on top of the red block."
+    elif 'stack' in task:
+        return "stack the red block on top of the green block"   
+    else:
+        raise NotImplementedError(f"language instructions not supported for {task}")
+        
         
 def download(datasets={}, dataset_type='source', cache=DEFAULT_CACHE, **kwargs):
     """
