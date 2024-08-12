@@ -4,6 +4,7 @@
 
 from collections import OrderedDict
 import numpy as np
+import random
 
 from robosuite.utils.transform_utils import convert_quat
 from robosuite.utils.mjcf_utils import CustomMaterial, find_elements, string_to_array
@@ -14,6 +15,7 @@ from robosuite.models.objects import BoxObject
 from robosuite.models.tasks import ManipulationTask
 from robosuite.utils.placement_samplers import UniformRandomSampler
 from robosuite.utils.observables import Observable, sensor
+from robosuite.utils.mjmod import TextureModder
 from robosuite.environments.manipulation.stack import Stack
 
 from mimicgen.envs.robosuite.single_arm_env_mg import SingleArmEnv_MG
@@ -26,6 +28,8 @@ class Stack_D0(Stack, SingleArmEnv_MG):
     def __init__(self, **kwargs):
         assert "placement_initializer" not in kwargs, "this class defines its own placement initializer"
 
+        self.motion_threshold = kwargs.get('motion_threshold', 0.1)
+        
         bounds = self._get_initial_placement_bounds()
 
         # ensure cube symmetry
@@ -54,6 +58,18 @@ class Stack_D0(Stack, SingleArmEnv_MG):
     def reward(self, action=None):
         return Stack.reward(self, action=action)
 
+    def staged_rewards(self):
+        r_reach, r_lift, r_stack = super().staged_rewards()
+       
+        if r_stack > 0:
+            xvelp = self.sim.data.get_body_xvelp(self.cubeA.root_body)
+            xvelr = self.sim.data.get_body_xvelr(self.cubeA.root_body)
+            if any(np.abs(xvelp) > self.motion_threshold): #or any(np.abs(xvelr) > self.motion_threshold):
+                print(f'mimicgen {self.__class__.__name__} - muting reward', r_stack, 'CUBE_A xvelp', xvelp, 'xvelr', xvelr)
+                r_stack = 0.0
+                
+        return r_reach, r_lift, r_stack
+        
     def _check_lifted(self, body_id, margin=0.04):
         # lifting is successful when the cube is above the table top by a margin
         body_pos = self.sim.data.body_xpos[body_id]
@@ -229,8 +245,139 @@ class Stack_D1(Stack_D0):
             )
             for k in ["cubeA", "cubeB"]
         }
+        
+        
+class Stack_D2(Stack_D1):
+    """
+    Domain randomization on the block colors, in addition to wider camera view and initialization bounds like Stack_D1.
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        self.cube_keys = ['A', 'B']
+        self.cube_names = [f"cube{x}_g0" for x in self.cube_keys]
+        self.cube_colors = ['red', 'green']
+        
+        self.colors = {
+            'red': (255,0,0),
+            'orange': (255,128,0),
+            'yellow': (255,255,0),
+            'green': (128,255,0),
+            'blue': (0,128,255),
+            'purple': (128,0,255),
+        }
+        
+        self.instruction_desc = {
+            'PICK': [
+                'stack',
+                'place',
+                'put',
+            ],
+            
+            'PLACE': [
+                'on the',
+                'on top of the'
+            ],
+            
+            'NOUN_A': [
+                'block',
+                'cube',
+            ],
+            
+            'NOUN_B': [
+                'block',
+                'cube',
+                'one',
+            ],
+
+            'A': [
+                'COLOR_A',
+                'COLOR_A',
+                'COLOR_A',
+                'COLOR_A',
+                'COLOR_A',
+                'small',
+                'smaller',
+                'little',
+            ],
+            
+            'B': [
+                'COLOR_B',
+                'COLOR_B',
+                'COLOR_B',
+                'COLOR_B',
+                'COLOR_B',
+                'big',
+                'larger',
+                'other',
+            ],
+        }
+
+        self.instruction = "put the red block on top of the green block"
+        self.instruction_template = "$PICK the $A $NOUN_A $PLACE $B $NOUN_B"
+    
+    def randomize_colors(self):
+        mod = TextureModder(self.sim, geom_names=self.cube_names + [x + '_vis' for x in self.cube_names])
+        self.cube_colors = random.sample(self.colors.keys(), 2)
+
+        for i, cube_name in enumerate(self.cube_names):
+            mod.set_geom_rgb(cube_name, self.colors[self.cube_colors[i]])
+            mod.set_rgb(cube_name + '_vis', self.colors[self.cube_colors[i]])
+
+        #mod.set_rgb('table_visual', (200,200,200))       
+            
+    def randomize_instruction(self, store=True):
+        instruction = self.instruction_template
+        instruction_desc = self.randomize_descriptor(self.instruction_desc)
+            
+        for key, value in instruction_desc.items():
+            instruction = instruction.replace(f"${key}", value)
+
+        if store:
+            self.instruction = instruction
+            
+        return instruction
+    
+    def randomize_descriptor(self, desc):
+        if isinstance(desc, dict):
+            return {k: self.randomize_descriptor(v) for k,v in self.instruction_desc.items()}
+        elif not isinstance(desc, list):
+            raise TypeError(f"expected var to be dict or list (was {type(var)})")
+            
+        val = desc[random.randrange(len(desc))]
+        
+        for i, key in enumerate(self.cube_keys):
+            val = val.replace(f"COLOR_{key}", self.cube_colors[i])
+
+        return val
+
+    def reset(self):
+        obs = super().reset()
+        #print(self.sim.model.geom_names)
+        self.randomize_colors()
+        self.randomize_instruction()
+        print(f"\nInstruction: {self.instruction}")
+        return self._get_observations(force_update=True)
 
 
+class Stack_D3(Stack_D2):
+    """
+    Randomized colors every episode, and randomized language instructions every frame
+    """
+    def step(self, action):
+        self.randomize_instruction()
+        return super().step(action)
+        
+
+class Stack_D4(Stack_D3):
+    """
+    Randomized colors and language instructions every frame
+    """
+    def step(self, action):
+        self.randomize_colors()
+        return super().step(action)
+        
+                       
 class StackThree(Stack_D0):
     """
     Stack three cubes instead of two.

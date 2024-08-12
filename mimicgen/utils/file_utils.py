@@ -227,6 +227,7 @@ def write_demo_to_hdf5(
     actions,
     src_demo_inds=None,
     src_demo_labels=None,
+    instructions=None,
 ):
     """
     Helper function to write demonstration to an hdf5 file (robomimic format) in a folder. It will be 
@@ -290,6 +291,10 @@ def write_demo_to_hdf5(
     if src_demo_labels is not None:
         ep_data_grp.create_dataset("src_demo_labels", data=np.array(src_demo_labels))
 
+    # maybe write natural language instructions
+    if instructions:
+        ep_data_grp.create_dataset("instructions", data=instructions)
+        
     # episode metadata
     if ("model" in initial_state) and (initial_state["model"] is not None):
         # only for robosuite envs

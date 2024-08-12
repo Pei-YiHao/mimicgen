@@ -347,6 +347,7 @@ class WaypointTrajectory(object):
         states = []
         actions = []
         observations = []
+        instructions = []
         datagen_infos = []
         success = { k: False for k in env.is_success() } # success metrics
 
@@ -391,6 +392,9 @@ class WaypointTrajectory(object):
                 # store datagen info too
                 datagen_info = env_interface.get_datagen_info(action=play_action)
 
+                # get the natural language instruction
+                instruction = getattr(env.base_env, 'instruction', None)
+
                 # step environment
                 env.step(play_action)
 
@@ -401,13 +405,32 @@ class WaypointTrajectory(object):
                 observations.append(obs)
                 datagen_infos.append(datagen_info)
 
+                if instruction:
+                    instructions.append(instruction)
+                    
                 cur_success_metrics = env.is_success()
-                for k in success:
-                    success[k] = success[k] or cur_success_metrics[k]
 
+                for k in success:
+                    if len(success) > 1:
+                        success[k] = success[k] or cur_success_metrics[k]
+                    else:
+                        success[k] = cur_success_metrics[k]  # make sure final frame is still successful
+         
+        result_delay = 0 if len(success) > 1 or not success['task'] else 10
+        zero_action = np.concatenate([np.zeros(*action_pose.shape), waypoint.gripper_action], axis=0)
+        
+        for n in range(result_delay):
+            env.step(zero_action)
+            cur_success_metrics = env.is_success()
+            for k,v in cur_success_metrics.items():
+                if success[k] and not v:
+                    print(f"Episode failed after {n+1} extra steps")
+                    success[k] = False
+       
         results = dict(
             states=states,
             observations=observations,
+            instructions=instructions,
             datagen_infos=datagen_infos,
             actions=np.array(actions),
             success=bool(success["task"]),

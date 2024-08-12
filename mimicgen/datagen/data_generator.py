@@ -252,6 +252,7 @@ class DataGenerator(object):
         # save generated data in these variables
         generated_states = []
         generated_obs = []
+        generated_instructions = []
         generated_datagen_infos = []
         generated_actions = []
         generated_success = False
@@ -379,6 +380,7 @@ class DataGenerator(object):
             if len(exec_results["states"]) > 0:
                 generated_states += exec_results["states"]
                 generated_obs += exec_results["observations"]
+                generated_instructions += exec_results["instructions"]
                 generated_datagen_infos += exec_results["datagen_infos"]
                 generated_actions.append(exec_results["actions"])
                 generated_success = generated_success or exec_results["success"]
@@ -400,6 +402,7 @@ class DataGenerator(object):
             initial_state=new_initial_state,
             states=generated_states,
             observations=generated_obs,
+            instructions=generated_instructions,
             datagen_infos=generated_datagen_infos,
             actions=generated_actions,
             success=generated_success,

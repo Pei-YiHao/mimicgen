@@ -28,6 +28,7 @@ import shutil
 import json
 import time
 import tqdm
+import pprint
 import argparse
 import traceback
 import random
@@ -349,6 +350,7 @@ def generate_dataset(
                     actions=generated_traj["actions"],
                     src_demo_inds=generated_traj["src_demo_inds"],
                     src_demo_labels=generated_traj["src_demo_labels"],
+                    instructions=generated_traj["instructions"],
                 )
                 selected_src_demo_inds_succ.append(generated_traj["src_demo_inds"])
             else:
@@ -369,6 +371,7 @@ def generate_dataset(
                         actions=generated_traj["actions"],
                         src_demo_inds=generated_traj["src_demo_inds"],
                         src_demo_labels=generated_traj["src_demo_labels"],
+                        instructions=generated_traj["instructions"],
                     )
 
             num_attempts += 1
@@ -423,13 +426,13 @@ def generate_dataset(
     MG_FileUtils.merge_all_hdf5(
         folder=tmp_dataset_folder_path,
         new_hdf5_path=new_dataset_path,
-        delete_folder=True,
+        delete_folder=False,#True,
     )
     if mg_config.experiment.generation.keep_failed:
         MG_FileUtils.merge_all_hdf5(
             folder=tmp_dataset_failed_folder_path,
             new_hdf5_path=new_failed_dataset_path,
-            delete_folder=True,
+            delete_folder=False,#True,
         )
 
     # get episode length statistics
@@ -464,7 +467,7 @@ def generate_dataset(
         if (num_success > 0):
             playback_video_path = os.path.join(new_dataset_folder_path, "playback_{}.mp4".format(new_dataset_folder_name))
             num_render = mg_config.experiment.num_demo_to_render
-            print("Rendering successful trajectories...")
+            print("Rendering successful trajectories to ", playback_video_path)
             RobomimicUtils.make_dataset_video(
                 dataset_path=new_dataset_path,
                 video_path=playback_video_path,
