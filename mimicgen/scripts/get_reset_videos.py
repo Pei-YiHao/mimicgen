@@ -19,7 +19,7 @@ import mimicgen
 
 
 # base output folder
-OUTPUT_FOLDER = "/tmp/mimicgen_reset_vids"
+OUTPUT_FOLDER = "/data2/peiyh/openvla-mimic/data/reset_videos"
 
 # number of resets to view per task
 NUM_RESETS = 10
@@ -71,12 +71,12 @@ DATASET_INFOS = [
     ),
     dict(
         name="stack",
-        envs=["Stack_D0", "Stack_D1"],
+        envs=["Stack_D0", "Stack_D1", "Stack_D2", "Stack_D3"],
         ds_names=["stack_d0.hdf5", "stack_d1.hdf5"],
     ),
     dict(
         name="stack_three",
-        envs=["StackThree_D0", "StackThree_D1"],
+        envs=["StackThree_D0", "StackThree_D1", "StackThree_D2", "StackThree_D3"],
         ds_names=["stack_three_d0.hdf5", "stack_three_d1.hdf5"],
     ),
     dict(

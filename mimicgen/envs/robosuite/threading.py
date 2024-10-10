@@ -573,3 +573,24 @@ class Threading_D2(Threading_D1):
                 reference=self.table_offset,
             ),
         )
+
+class Threading_D3(Threading_D2):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.instruction = "Insert the needle into the ring by threading it through the hole."
+        self.instructions = [
+            "insert the needle into the ring",
+            "thread the needle through the hole",
+            'insert the needle into the ring by threading it through the hole',
+            'insert the needle through the hole',
+            'thread the needle into the ring',
+        ]
+        
+    def randomize_instruction(self):
+        self.instruction = np.random.choice(self.instructions)
+        return self.instruction
+    
+    def reset(self):
+        obs = super().reset()
+        self.randomize_instruction()
+        return self._get_observations(force_update=True)

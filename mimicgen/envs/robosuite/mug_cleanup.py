@@ -698,3 +698,112 @@ class MugCleanup_O2(MugCleanup_D0):
             friction=(1, 1, 1),
             margin=0.001,
         )
+        
+class MugCleanup_O3(MugCleanup_D1):
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        # list of tuples - (shapenet_id, shapenet_scale)
+        self._assets = [
+            ("3143a4ac", 0.8),          # beige round mug
+            ("34ae0b61", 0.8),          # bronze mug with green inside
+            ("128ecbc1", 0.66666667),   # light blue round mug, thicker boundaries
+            ("d75af64a", 0.66666667),   # off-white cylindrical tapered mug
+            ("5fe74bab", 0.8),          # brown mug, thin boundaries
+            ("345d3e72", 0.66666667),   # black round mug
+            ("48e260a6", 0.66666667),   # red round mug 
+            ("8012f52d", 0.8),          # yellow round mug with bigger base 
+            ("b4ae56d6", 0.8),          # yellow cylindrical mug 
+            ("c2eacc52", 0.8),          # wooden cylindrical mug
+            ("e94e46bc", 0.8),          # dark blue cylindrical mug
+            ("fad118b3", 0.66666667),   # tall green cylindrical mug
+        ]
+        self.mug_id_to_name = {
+            "3143a4ac": "beige round mug",
+            "34ae0b61": "bronze mug with green inside",
+            "128ecbc1": "light blue round mug, thicker boundaries",
+            "d75af64a": "off-white cylindrical tapered mug",
+            "5fe74bab": "brown mug, thin boundaries",
+            "345d3e72": "black round mug",
+            "48e260a6": "red round mug",
+            "8012f52d": "yellow round mug with bigger base",
+            "b4ae56d6": "yellow cylindrical mug",
+            "c2eacc52": "wooden cylindrical mug",
+            "e94e46bc": "dark blue cylindrical mug",
+            "fad118b3": "tall green cylindrical mug",
+        }
+        self.instruction = "pick up the mug and place it in the drawer."
+        self.instruction_templates = [
+            "$PICK the $MUG and $PLACE it in the drawer.",
+            "$MOVE the $MUG to the drawer.",
+            "$PUT the $MUG in the drawer.",
+            "1. Open the drawer. 2. $PICK the $MUG. 3. $PLACE the $MUG in the drawer. 4. Close the drawer.",
+            "1. Open the drawer. 2. $PICK the $MUG. 3. $PLACE the $MUG in the drawer. 4. Close the drawer.",
+        ]
+        self.instruction_desc = {
+            'PICK': [
+                'pick up',
+                'take',
+                'lift'
+            ],
+            'PLACE': [
+                'place',
+                'put',
+            ],
+            'MOVE':[
+                'move',
+            ],
+            'MUG': [
+                'mug',
+                'cup',
+            ],
+            'PUT': [
+                'put',
+            ]
+        }
+        self.randomize_instruction()
+        self._base_mjcf_path = os.path.join(mimicgen.__path__[0], "models/robosuite/assets/shapenet_core/mugs")
+        super(MugCleanup_D1, self).__init__(shapenet_id=None, shapenet_scale=None, **kwargs)
+
+    def _get_object_model(self):
+        """
+        Allow subclasses to override which object to pack into drawer - should load into @self.cleanup_object.
+        """
+        self._shapenet_id, self._shapenet_scale = random.choice(self._assets)
+        mjcf_path = os.path.join(self._base_mjcf_path, "{}/model.xml".format(self._shapenet_id))
+
+        self.cleanup_object = BlenderObject(
+            name="cleanup_object",
+            mjcf_path=mjcf_path,
+            scale=self._shapenet_scale,
+            solimp=(0.998, 0.998, 0.001),
+            solref=(0.001, 1),
+            density=100,
+            # friction=(0.95, 0.3, 0.1),
+            friction=(1, 1, 1),
+            margin=0.001,
+        )
+        
+    def randomize_descriptor(self, desc):
+        if isinstance(desc, dict):
+            return {k: self.randomize_descriptor(v) for k,v in desc.items()}
+        elif not isinstance(desc, list):
+            raise TypeError(f"expected var to be dict or list (was {type(desc)})")
+            
+        val = desc[random.randrange(len(desc))]
+        return val
+    
+    def randomize_instruction(self, store=True):
+        instruction = random.sample(self.instruction_templates, 1)[0]
+        instruction_desc = self.randomize_descriptor(self.instruction_desc)
+        for key, value in instruction_desc.items():
+            instruction = instruction.replace(f"${key}", value)
+        if store:
+            self.instruction = instruction
+        return instruction
+    
+    def reset(self):
+        obs = super().reset()
+        self.randomize_instruction()
+        return self._get_observations(force_update=True)

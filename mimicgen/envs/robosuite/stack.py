@@ -259,12 +259,12 @@ class Stack_D2(Stack_D1):
         self.cube_colors = ['red', 'green']
         
         self.colors = {
-            'red': (255,0,0),
-            'orange': (255,128,0),
-            'yellow': (255,255,0),
-            'green': (128,255,0),
-            'blue': (0,128,255),
-            'purple': (128,0,255),
+            'red': np.array([255,0,0]),
+            'orange': np.array([255,128,0]),
+            'yellow': np.array([255,255,0]),
+            'green': np.array([128,255,0]),
+            'blue': np.array([0,128,255]),
+            'purple': np.array([128,0,255]),
         }
         
         self.instruction_desc = {
@@ -319,11 +319,9 @@ class Stack_D2(Stack_D1):
     def randomize_colors(self):
         mod = TextureModder(self.sim, geom_names=self.cube_names + [x + '_vis' for x in self.cube_names])
         self.cube_colors = random.sample(self.colors.keys(), 2)
-
         for i, cube_name in enumerate(self.cube_names):
-            mod.set_geom_rgb(cube_name, self.colors[self.cube_colors[i]])
+            mod.set_geom_rgb(cube_name, (self.colors[self.cube_colors[i]]))
             mod.set_rgb(cube_name + '_vis', self.colors[self.cube_colors[i]])
-
         #mod.set_rgb('table_visual', (200,200,200))       
             
     def randomize_instruction(self, store=True):
@@ -356,7 +354,7 @@ class Stack_D2(Stack_D1):
         #print(self.sim.model.geom_names)
         self.randomize_colors()
         self.randomize_instruction()
-        print(f"\nInstruction: {self.instruction}")
+        #print(f"\nInstruction: {self.instruction}")
         return self._get_observations(force_update=True)
 
 
@@ -534,8 +532,8 @@ class StackThree(Stack_D0):
         )
         self.cubeC = BoxObject(
             name="cubeC",
-            size_min=[0.02, 0.02, 0.02],
-            size_max=[0.02, 0.02, 0.02],
+            size_min=[0.015, 0.015, 0.015],
+            size_max=[0.015, 0.015, 0.015],
             rgba=[1, 0, 0, 1],
             material=bluewood,
         )
@@ -692,4 +690,297 @@ class StackThree_D1(StackThree_D0):
                 reference=np.array((0, 0, 0.8)),
             )
             for k in ["cubeA", "cubeB", "cubeC"]
+        }
+
+class StackThree_D2(StackThree_D1):
+    """
+    在每个回合随机化颜色，并在回合开始时随机化语言指令
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        self.cube_keys = ['A', 'B', 'C']  # 包含三个方块
+        self.cube_names = [f"cube{x}_g0" for x in self.cube_keys]
+        self.cube_colors = ['red', 'green', 'blue']  # 默认颜色为红、绿、蓝
+        
+        self.colors = {
+            'red': (255, 0, 0),
+            'orange': (255, 128, 0),
+            'yellow': (255, 255, 0),
+            'green': (128, 255, 0),
+            'blue': (0, 128, 255),
+            'purple': (128, 0, 255),
+            'black': (12, 12, 12),
+            'gray': (128, 128, 128),
+            'dark gray': (64, 64, 64),
+            'pink': (255, 153, 255),
+            'brown': (153,76,0),
+        }
+        
+        # 新增三块方块的描述
+        self.instruction_desc = {
+            'PICK': [
+                'stack',
+                'place',
+                'put',
+            ],
+            'PLACE': [
+                'on the',
+                'on top of the'
+            ],
+            'NOUN_A': [
+                'block',
+                'cube',
+            ],
+            'NOUN_B': [
+                'block',
+                'cube',
+                'one',
+            ],
+            'A': [
+                'COLOR_A',
+                'COLOR_A',
+                'COLOR_A',
+                'COLOR_A',
+                'COLOR_A',
+                'medium',
+            ],
+            'B': [
+                'COLOR_B',
+                'COLOR_B',
+                'COLOR_B',
+                'COLOR_B',
+                'COLOR_B',
+                'biggest'
+            ],
+            'C': [
+                'COLOR_C',
+                'COLOR_C',
+                'COLOR_C',
+                'COLOR_C',
+                'COLOR_C',
+                'smallest'
+            ]
+        }
+
+        # 默认指令
+        self.instruction = "put the red block on top of the green block, then place the blue block on top"
+        self.instruction_template = "$PICK the $A $NOUN_A $PLACE $B $NOUN_B, then $PICK the $C $NOUN_A $PLACE $A $NOUN_B"
+        self.instruction_templates = [
+            "$PICK the $A $NOUN_A $PLACE $B $NOUN_B, then $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "1. $PICK the $A $NOUN_A $PLACE $B $NOUN_B. 2. $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "$PICK the $A $NOUN_A $PLACE $B $NOUN_B, then $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "1. $PICK the $A $NOUN_A $PLACE $B $NOUN_B. 2. $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "1. $PICK the $A $NOUN_A $PLACE $B $NOUN_B. 2. $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "1. $PICK the $A $NOUN_A $PLACE $B $NOUN_B. 2. $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "firstly $PICK the $A $NOUN_A $PLACE $B $NOUN_B, after that $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+        ]
+        
+    def randomize_colors(self):
+        # 随机选择三种颜色
+        mod = TextureModder(self.sim, geom_names=self.cube_names + [x + '_vis' for x in self.cube_names])
+        self.cube_colors = random.sample(self.colors.keys(), 3)
+
+        for i, cube_name in enumerate(self.cube_names):
+            mod.set_geom_rgb(cube_name, self.colors[self.cube_colors[i]])
+            mod.set_rgb(cube_name + '_vis', self.colors[self.cube_colors[i]])
+        
+
+    def randomize_instruction(self, store=True):
+        instruction = random.sample(self.instruction_templates, 1)[0]
+        instruction_desc = self.randomize_descriptor(self.instruction_desc)
+            
+        for key, value in instruction_desc.items():
+            instruction = instruction.replace(f"${key}", value)
+
+        if store:
+            self.instruction = instruction
+            
+        return instruction
+    
+    def randomize_descriptor(self, desc):
+        if isinstance(desc, dict):
+            return {k: self.randomize_descriptor(v) for k,v in desc.items()}
+        elif not isinstance(desc, list):
+            raise TypeError(f"expected var to be dict or list (was {type(desc)})")
+            
+        val = desc[random.randrange(len(desc))]
+        
+        for i, key in enumerate(self.cube_keys):
+            val = val.replace(f"COLOR_{key}", self.cube_colors[i])
+
+        return val
+
+    def reset(self):
+        obs = super().reset()
+        self.randomize_colors()
+        self.randomize_instruction()
+        return self._get_observations(force_update=True)
+
+class StackThree_D3(StackThree_D2):
+    """
+    在每个回合随机化颜色，并在每帧随机化语言指令
+    """
+    def step(self, action):
+        # 每帧随机化语言指令
+        self.randomize_instruction()
+        return super().step(action)
+
+
+class StackFour(Stack_D0):
+    """
+    Stack four cubes instead of two.
+    A is placed on B, C is placed on A, and D is placed on C.
+    """
+    def __init__(self, **kwargs):
+        assert "placement_initializer" not in kwargs, "this class defines its own placement initializer"
+
+        bounds = self._get_initial_placement_bounds()
+
+        # ensure cube symmetry
+        assert len(bounds) == 4
+        for k in ["x", "y", "z_rot", "reference"]:
+            for cube_key in ['cubeA', 'cubeB', 'cubeC', 'cubeD']:
+                assert np.array_equal(np.array(bounds["cubeA"][k]), np.array(bounds[cube_key][k]))
+
+        placement_initializer = UniformRandomSampler(
+            name="ObjectSampler",
+            x_range=bounds["cubeA"]["x"],
+            y_range=bounds["cubeA"]["y"],
+            rotation=bounds["cubeA"]["z_rot"],
+            rotation_axis='z',
+            ensure_object_boundary_in_range=False,
+            ensure_valid_placement=True,
+            reference_pos=bounds["cubeA"]["reference"],
+            z_offset=0.01,
+        )
+
+        Stack_D0.__init__(self, placement_initializer=placement_initializer, **kwargs)
+
+    def _check_cubeD_stacked(self):
+        grasping_cubeD = self._check_grasp(gripper=self.robots[0].gripper, object_geoms=self.cubeD)
+        cubeD_lifted = self._check_lifted(self.cubeD_body_id, margin=0.08)
+        cubeD_touching_cubeC = self.check_contact(self.cubeD, self.cubeC)
+        return (not grasping_cubeD) and cubeD_lifted and cubeD_touching_cubeC
+
+    def staged_rewards(self):
+        r_reach, r_lift, r_stack = super().staged_rewards()
+
+        # Stacking is successful when A is on B, C is on A, and D is on C.
+        if self._check_cubeA_stacked() and self._check_cubeC_stacked() and self._check_cubeD_stacked():
+            r_stack = 1.0
+
+        return r_reach, r_lift, r_stack
+
+    def _load_model(self):
+        """
+        Loads an xml model, puts it in self.model
+        """
+        super()._load_model()
+
+        # Initialize objects of interest
+        tex_attrib = {
+            "type": "cube",
+        }
+        mat_attrib = {
+            "texrepeat": "1 1",
+            "specular": "0.4",
+            "shininess": "0.1",
+        }
+        redwood = CustomMaterial(
+            texture="WoodRed",
+            tex_name="redwood",
+            mat_name="redwood_mat",
+            tex_attrib=tex_attrib,
+            mat_attrib=mat_attrib,
+        )
+        greenwood = CustomMaterial(
+            texture="WoodGreen",
+            tex_name="greenwood",
+            mat_name="greenwood_mat",
+            tex_attrib=tex_attrib,
+            mat_attrib=mat_attrib,
+        )
+        bluewood = CustomMaterial(
+            texture="WoodBlue",
+            tex_name="bluewood",
+            mat_name="bluewood_mat",
+            tex_attrib=tex_attrib,
+            mat_attrib=mat_attrib,
+        )
+        yellowwood = CustomMaterial(
+            texture="WoodYellow",
+            tex_name="yellowwood",
+            mat_name="yellowwood_mat",
+            tex_attrib=tex_attrib,
+            mat_attrib=mat_attrib,
+        )
+
+        self.cubeA = BoxObject(
+            name="cubeA",
+            size_min=[0.02, 0.02, 0.02],
+            size_max=[0.02, 0.02, 0.02],
+            rgba=[1, 0, 0, 1],
+            material=redwood,
+        )
+        self.cubeB = BoxObject(
+            name="cubeB",
+            size_min=[0.025, 0.025, 0.025],
+            size_max=[0.025, 0.025, 0.025],
+            rgba=[0, 1, 0, 1],
+            material=greenwood,
+        )
+        self.cubeC = BoxObject(
+            name="cubeC",
+            size_min=[0.015, 0.015, 0.015],
+            size_max=[0.015, 0.015, 0.015],
+            rgba=[0, 0, 1, 1],
+            material=bluewood,
+        )
+        self.cubeD = BoxObject(
+            name="cubeD",
+            size_min=[0.01, 0.01, 0.01],
+            size_max=[0.01, 0.01, 0.01],
+            rgba=[1, 1, 0, 1],
+            material=yellowwood,
+        )
+
+        cubes = [self.cubeA, self.cubeB, self.cubeC, self.cubeD]
+        # Create placement initializer
+        if self.placement_initializer is not None:
+            self.placement_initializer.reset()
+            self.placement_initializer.add_objects(cubes)
+        else:
+            self.placement_initializer = UniformRandomSampler(
+                name="ObjectSampler",
+                mujoco_objects=cubes,
+                x_range=[-0.10, 0.10],
+                y_range=[-0.10, 0.10],
+                rotation=None,
+                ensure_object_boundary_in_range=False,
+                ensure_valid_placement=True,
+                reference_pos=self.table_offset,
+                z_offset=0.01,
+            )
+
+        # task includes arena, robot, and objects of interest
+        self.model = ManipulationTask(
+            mujoco_arena=self._load_arena(),
+            mujoco_robots=[robot.robot_model for robot in self.robots],
+            mujoco_objects=cubes,
+        )
+
+    def _get_initial_placement_bounds(self):
+        """
+        Internal function to get bounds for randomization of initial placements of objects.
+        Should return a dictionary with bounds for four cubes.
+        """
+        return {
+            k: dict(
+                x=(-0.10, 0.10),
+                y=(-0.10, 0.10),
+                z_rot=(0., 2. * np.pi),
+                reference=np.array((0, 0, 0.8)),
+            )
+            for k in ["cubeA", "cubeB", "cubeC", "cubeD"]
         }

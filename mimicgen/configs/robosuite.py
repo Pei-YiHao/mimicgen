@@ -310,6 +310,87 @@ class StackThree_Config(MG_Config):
         )
         self.task.task_spec.do_not_lock_keys()
 
+class StackFour_Config(MG_Config):
+    """
+    Corresponds to robosuite StackThree task and variants.
+    """
+    NAME = "stack_four"
+    TYPE = "robosuite"
+
+    def task_config(self):
+        """
+        This function populates the `config.task` attribute of the config, 
+        which has settings for each object-centric subtask in a task. Each 
+        dictionary should have kwargs for the @add_subtask method in the 
+        @MG_TaskSpec object.
+        """
+        self.task.task_spec.subtask_1 = dict(
+            object_ref="cubeA", 
+            subtask_term_signal="grasp_1",
+            subtask_term_offset_range=(10, 20),
+            selection_strategy="nearest_neighbor_object",
+            selection_strategy_kwargs=dict(nn_k=3),
+            action_noise=0.05,
+            num_interpolation_steps=5,
+            num_fixed_steps=0,
+            apply_noise_during_interpolation=False,
+        )
+        self.task.task_spec.subtask_2 = dict(
+            object_ref="cubeB", 
+            subtask_term_signal="stack_1",
+            subtask_term_offset_range=(10, 20),
+            selection_strategy="nearest_neighbor_object",
+            selection_strategy_kwargs=dict(nn_k=3),
+            action_noise=0.05,
+            num_interpolation_steps=5,
+            num_fixed_steps=0,
+            apply_noise_during_interpolation=False,
+        )
+        self.task.task_spec.subtask_3 = dict(
+            object_ref="cubeC", 
+            subtask_term_signal="grasp_2",
+            subtask_term_offset_range=(10, 20),
+            selection_strategy="nearest_neighbor_object",
+            selection_strategy_kwargs=dict(nn_k=3),
+            action_noise=0.05,
+            num_interpolation_steps=5,
+            num_fixed_steps=0,
+            apply_noise_during_interpolation=False,
+        )
+        self.task.task_spec.subtask_4 = dict(
+            object_ref="cubeA", 
+            subtask_term_signal="stack_2",
+            subtask_term_offset_range=(10, 20),
+            selection_strategy="nearest_neighbor_object",
+            selection_strategy_kwargs=dict(nn_k=3),
+            action_noise=0.05,
+            num_interpolation_steps=5,
+            num_fixed_steps=0,
+            apply_noise_during_interpolation=False,
+        )
+        self.task.task_spec.subtask_5 = dict(
+            object_ref="cubeD",
+            subtask_term_signal="grasp_3",
+            subtask_term_offset_range=(10, 20),
+            selection_strategy="nearest_neighbor_object",
+            selection_strategy_kwargs=dict(nn_k=3),
+            action_noise=0.05,
+            num_interpolation_steps=5,
+            num_fixed_steps=0,
+            apply_noise_during_interpolation=False,
+        )
+        self.task.task_spec.subtask_6 = dict(
+            object_ref="cubeC",
+            subtask_term_signal=None,
+            subtask_term_offset_range=None,
+            selection_strategy="nearest_neighbor_object",
+            selection_strategy_kwargs=dict(nn_k=3),
+            action_noise=0.05,
+            num_interpolation_steps=5,
+            num_fixed_steps=0,
+            apply_noise_during_interpolation=False,
+        )
+        self.task.task_spec.do_not_lock_keys()
 
 class HammerCleanup_Config(MG_Config):
     """
