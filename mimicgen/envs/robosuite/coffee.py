@@ -840,6 +840,170 @@ class Coffee_D2(Coffee_D1):
             ),
         )
 
+import random
+from robosuite.utils.mjmod import TextureModder
+
+class Coffee_O1(Coffee_D1):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.object_names = ["coffee_machine", "coffee_pod"]
+        self.coffee_pod_colors = {
+            'red': (255, 0, 0),
+            'orange': (255, 128, 0),
+            'yellow': (255, 255, 0),
+            'green': (128, 255, 0),
+            'blue': (0, 128, 255),
+            'purple': (128, 0, 255),
+            'black': (12, 12, 12),
+            'gray': (128, 128, 128),
+            'dark gray': (64, 64, 64),
+            'pink': (255, 153, 255),
+            'brown': (153,76,0),
+            'white': (245, 245, 245),
+        }
+        self.instruction = "Place the coffee pod in the coffee machine."
+        self.instruction_templates = [
+            "$PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "$MOVE the $NOUN_A to the $NOUN_B",
+            "Prepare for coffee by $PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "Prepare for coffee by $MOVE the $NOUN_A to the $NOUN_B.",
+            "$PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "$MOVE the $NOUN_A to the $NOUN_B",
+            "Prepare for coffee by $PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "Prepare for coffee by $MOVE the $NOUN_A to the $NOUN_B.",
+            "$PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "$MOVE the $NOUN_A to the $NOUN_B",
+            "Prepare for coffee by $PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "Prepare for coffee by $MOVE the $NOUN_A to the $NOUN_B.",
+            "$PICK the $COLOR $NOUN_A and $PLACE it in the $NOUN_B.",
+            "$MOVE the $COLOR $NOUN_A to the $NOUN_B",
+            "Prepare for coffee by $PICK the $COLOR $NOUN_A and $PLACE it in the $NOUN_B.",
+            "Prepare for coffee by $MOVE the $COLOR $NOUN_A to the $NOUN_B.",
+        ]
+        self.instruction_desc = {
+            'PICK': ['pick up', 'take', 'lift'],
+            'MOVE': ['move', 'fill', 'place', 'put'],
+            'PLACE': ['place', 'put', 'set'],
+            'NOUN_A': ['coffee pod', 'coffee capsule', 'capsule'],
+            'NOUN_B': ['coffee machine', 'capsule coffee machine', 'coffee maker', 'capsule coffee maker'],
+            'COLOR': [
+                'COLOR_A'
+            ]
+        }
+        self.pod_color = 'white'
+        
+    def randomize_colors(self):
+        mod = TextureModder(self.sim, geom_names=["coffee_pod_g0", "coffee_pod_g0_visual"])
+        self.pod_color = random.sample(self.coffee_pod_colors.keys(), 1)[0]
+        mod.set_geom_rgb("coffee_pod_g0", self.coffee_pod_colors[self.pod_color])
+        mod.set_rgb("coffee_pod_g0_visual", self.coffee_pod_colors[self.pod_color])
+
+    def randomize_descriptor(self, desc):
+        if isinstance(desc, dict):
+            return {k: self.randomize_descriptor(v) for k,v in desc.items()}
+        elif not isinstance(desc, list):
+            raise TypeError(f"expected var to be dict or list (was {type(desc)})")      
+        val = desc[random.randrange(len(desc))]
+        val = val.replace("COLOR_A", self.pod_color)
+        return val
+    
+    def randomize_instruction(self, store=True):
+        instruction = random.sample(self.instruction_templates, 1)[0]
+        instruction_desc = self.randomize_descriptor(self.instruction_desc)
+            
+        for key, value in instruction_desc.items():
+            instruction = instruction.replace(f"${key}", value)
+
+        if store:
+            self.instruction = instruction
+        return instruction
+    
+    def reset(self):
+        obs = super().reset()
+        self.randomize_colors()
+        self.randomize_instruction()
+        return self._get_observations(force_update=True)
+    
+class Coffee_O2(Coffee_D2):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.object_names = ["coffee_machine", "coffee_pod"]
+        self.coffee_pod_colors = {
+            'red': (255, 0, 0),
+            'orange': (255, 128, 0),
+            'yellow': (255, 255, 0),
+            'green': (128, 255, 0),
+            'blue': (0, 128, 255),
+            'purple': (128, 0, 255),
+            'black': (12, 12, 12),
+            'gray': (128, 128, 128),
+            'dark gray': (64, 64, 64),
+            'pink': (255, 153, 255),
+            'brown': (153,76,0),
+            'white': (245, 245, 245),
+        }
+        self.instruction = "Place the coffee pod in the coffee machine."
+        self.instruction_templates = [
+            "$PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "$MOVE the $NOUN_A to the $NOUN_B",
+            "Prepare for coffee by $PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "Prepare for coffee by $MOVE the $NOUN_A to the $NOUN_B.",
+            "$PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "$MOVE the $NOUN_A to the $NOUN_B",
+            "Prepare for coffee by $PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "Prepare for coffee by $MOVE the $NOUN_A to the $NOUN_B.",
+            "$PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "$MOVE the $NOUN_A to the $NOUN_B",
+            "Prepare for coffee by $PICK the $NOUN_A and $PLACE it in the $NOUN_B.",
+            "Prepare for coffee by $MOVE the $NOUN_A to the $NOUN_B.",
+            "$PICK the $COLOR $NOUN_A and $PLACE it in the $NOUN_B.",
+            "$MOVE the $COLOR $NOUN_A to the $NOUN_B",
+            "Prepare for coffee by $PICK the $COLOR $NOUN_A and $PLACE it in the $NOUN_B.",
+            "Prepare for coffee by $MOVE the $COLOR $NOUN_A to the $NOUN_B.",
+        ]
+        self.instruction_desc = {
+            'PICK': ['pick up', 'take', 'lift'],
+            'MOVE': ['move', 'fill', 'place', 'put'],
+            'PLACE': ['place', 'put', 'set'],
+            'NOUN_A': ['coffee pod', 'coffee capsule', 'capsule'],
+            'NOUN_B': ['coffee machine', 'capsule coffee machine', 'coffee maker', 'capsule coffee maker'],
+            'COLOR': [
+                'COLOR_A'
+            ]
+        }
+        self.pod_color = 'white'
+        
+    def randomize_colors(self):
+        mod = TextureModder(self.sim, geom_names=["coffee_pod_g0", "coffee_pod_g0_visual"])
+        self.pod_color = random.sample(self.coffee_pod_colors.keys(), 1)[0]
+        mod.set_geom_rgb("coffee_pod_g0", self.coffee_pod_colors[self.pod_color])
+        mod.set_rgb("coffee_pod_g0_visual", self.coffee_pod_colors[self.pod_color])
+
+    def randomize_descriptor(self, desc):
+        if isinstance(desc, dict):
+            return {k: self.randomize_descriptor(v) for k,v in desc.items()}
+        elif not isinstance(desc, list):
+            raise TypeError(f"expected var to be dict or list (was {type(desc)})")      
+        val = desc[random.randrange(len(desc))]
+        val = val.replace("COLOR_A", self.pod_color)
+        return val
+    
+    def randomize_instruction(self, store=True):
+        instruction = random.sample(self.instruction_templates, 1)[0]
+        instruction_desc = self.randomize_descriptor(self.instruction_desc)
+            
+        for key, value in instruction_desc.items():
+            instruction = instruction.replace(f"${key}", value)
+
+        if store:
+            self.instruction = instruction
+        return instruction
+    
+    def reset(self):
+        obs = super().reset()
+        self.randomize_colors()
+        self.randomize_instruction()
+        return self._get_observations(force_update=True)
 
 class CoffeePreparation(Coffee):
     """
@@ -1288,3 +1452,170 @@ class CoffeePreparation_D1(CoffeePreparation_D0):
                 reference=np.array((0., 0., 0.)),
             ),
         )
+
+class CoffeePreparation_O1(CoffeePreparation_D1):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._base_mjcf_path = os.path.join(mimicgen.__path__[0], "models/robosuite/assets/shapenet_core/mugs")
+        self.mug_id_to_name = {
+            "3143a4ac": "beige round mug",
+            "34ae0b61": "bronze mug with green inside",
+            "128ecbc1": "light blue round mug, thicker boundaries",
+            "d75af64a": "off-white cylindrical tapered mug",
+            "5fe74bab": "brown mug, thin boundaries",
+            "345d3e72": "black round mug",
+            "48e260a6": "red round mug",
+            "8012f52d": "yellow round mug with bigger base",
+            "b4ae56d6": "yellow cylindrical mug",
+            "c2eacc52": "wooden cylindrical mug",
+            "e94e46bc": "dark blue cylindrical mug",
+            "fad118b3": "tall green cylindrical mug",
+        }
+        self.instruction_desc = {
+            'PICK': [
+                'pick up',
+                'take',
+                'lift'
+            ],
+            'PLACE': [
+                'place',
+                'put',
+            ],
+            'MOVE':[
+                'move',
+                'put',
+                'place'
+            ],
+            'NOUN_A':[
+                'mug',
+                'cup'
+            ],
+            'NOUN_B':[
+                'spout',
+                'coffee outlet'
+            ],
+            'NOUN_C':[
+                'tray',
+                'drip tray',
+                'cup tray',
+            ],
+            'NOUN_D':[
+                'capsule lid',
+                'capsule compartment lid',
+                'lid',
+            ],
+            'NOUN_E': [
+                'drawer'
+            ],
+            'NOUN_F': [
+                'capsule',
+                'coffee pod',
+                'coffee capsule',
+            ],
+            'NOUN_G':[
+                'coffee maker',
+                'machine',
+                'coffee machine',
+                'Espresso machine',
+                'capsule coffee maker',
+                'capsule coffee machine'
+            ]
+        }
+        self.instruction = "Prepare coffee. "
+        self.subtask_place_mug_templates = [
+            "$PICK the $NOUN_A and $PLACE under the $NOUN_B. ",
+            "$MOVE the $NOUN_A to the $NOUN_C. "
+            "$MOVE the $NOUN_A on the $NOUN_C. "
+            "Prepare the $NOUN_A. "
+        ]
+        self.subtask_open_capsule_lid_templates = [
+            "Open the $NOUN_D. "
+        ]
+        self.subtask_open_drawer_templates = [
+            "Open the $NOUN_E. "
+        ]
+        self.subtask_place_capsule_into_machine_templates = [
+            "$PICK the $NOUN_F and $PLACE into the $NOUN_G. ",
+            "insert the $NOUN_F into the $NOUN_G. "
+        ]
+        self.subtask_close_capsule_lid_templates = [
+            "Close the $NOUN_D. "
+        ]
+        self.connnect_words = [
+            ["Firstly ", 'Secondly ', 'Thirdly ', 'Then ', 'Finally '],
+            ["1. ", "2. ", "3. ", "4. ", "5. "],
+            ["Step 1: ","Step 2: ","Step 3: ","Step 4: ","Step 5: ",],
+            []
+        ]
+        self.subtask_templates = [
+            self.subtask_place_mug_templates,
+            self.subtask_open_capsule_lid_templates,
+            self.subtask_open_drawer_templates,
+            self.subtask_place_capsule_into_machine_templates,
+            self.subtask_close_capsule_lid_templates
+        ]
+    
+    def _get_mug_model(self):
+        """
+        Allow subclasses to override which mug to use.
+        """
+        assets = [
+            ("3143a4ac", 0.8),          # beige round mug
+            ("34ae0b61", 0.8),          # bronze mug with green inside
+            ("128ecbc1", 0.66666667),   # light blue round mug, thicker boundaries
+            ("d75af64a", 0.66666667),   # off-white cylindrical tapered mug
+            ("5fe74bab", 0.8),          # brown mug, thin boundaries
+            ("345d3e72", 0.66666667),   # black round mug
+            ("48e260a6", 0.66666667),   # red round mug 
+            ("8012f52d", 0.8),          # yellow round mug with bigger base 
+            ("b4ae56d6", 0.8),          # yellow cylindrical mug 
+            ("c2eacc52", 0.8),          # wooden cylindrical mug
+            ("e94e46bc", 0.8),          # dark blue cylindrical mug
+            ("fad118b3", 0.66666667),   # tall green cylindrical mug
+        ]
+        shapenet_id, shapenet_scale = random.choice(assets)
+        base_mjcf_path = os.path.join(mimicgen.__path__[0], "models/robosuite/assets/shapenet_core/mugs")
+        mjcf_path = os.path.join(base_mjcf_path, "{}/model.xml".format(shapenet_id))
+
+        self.mug = BlenderObject(
+            name="mug",
+            mjcf_path=mjcf_path,
+            scale=shapenet_scale,
+            solimp=(0.998, 0.998, 0.001),
+            solref=(0.001, 1),
+            density=100,
+            # friction=(0.95, 0.3, 0.1),
+            friction=(1, 1, 1),
+            margin=0.001,
+        )
+        
+    def randomize_descriptor(self, desc):
+        if isinstance(desc, dict):
+            return {k: self.randomize_descriptor(v) for k,v in desc.items()}
+        elif not isinstance(desc, list):
+            raise TypeError(f"expected var to be dict or list (was {type(desc)})")   
+        val = desc[random.randrange(len(desc))]
+        return val
+    
+    def randomize_instruction(self, store=True):
+        connections = random.choice(self.connnect_words)
+        instruction_desc = self.randomize_descriptor(self.instruction_desc)
+        if len(connections)==0:
+            self.instruction = "Prapare coffee"
+            return self.instruction
+        assert len(connections) == len(self.subtask_templates)
+        self.instruction = ""
+        for i, subtask_template in enumerate(self.subtask_templates):
+            subtask_instruction = random.choice(subtask_template)
+            for key, value in instruction_desc.items():
+                subtask_instruction = subtask_instruction.replace(f"${key}", value)
+            subtask_instruction = connections[i] + subtask_instruction
+            self.instruction += subtask_instruction
+        
+        return self.instruction
+            
+    def reset(self):
+        obs = super().reset()
+        self.randomize_instruction()
+        return self._get_observations(force_update=True)
+    

@@ -11,7 +11,7 @@ from robosuite.utils.mjcf_utils import CustomMaterial, find_elements, string_to_
 
 from robosuite.environments.manipulation.single_arm_env import SingleArmEnv
 from robosuite.models.arenas import TableArena
-from robosuite.models.objects import BoxObject
+from robosuite.models.objects import BoxObject, CylinderObject
 from robosuite.models.tasks import ManipulationTask
 from robosuite.utils.placement_samplers import UniformRandomSampler
 from robosuite.utils.observables import Observable, sensor
@@ -145,15 +145,15 @@ class Stack_D0(Stack, SingleArmEnv_MG):
         )
         self.cubeA = BoxObject(
             name="cubeA",
-            size_min=[0.02, 0.02, 0.02],
-            size_max=[0.02, 0.02, 0.02],
+            size_min=[0.008, 0.008, 0.008],
+            size_max=[0.008, 0.008, 0.008],
             rgba=[1, 0, 0, 1],
             material=redwood,
         )
         self.cubeB = BoxObject(
             name="cubeB",
-            size_min=[0.025, 0.025, 0.025],
-            size_max=[0.025, 0.025, 0.025],
+            size_min=[0.015, 0.015, 0.015],
+            size_max=[0.015, 0.015, 0.015],
             rgba=[0, 1, 0, 1],
             material=greenwood,
         )
@@ -195,11 +195,11 @@ class Stack_D0(Stack, SingleArmEnv_MG):
         """
         return { 
             k : dict(
-                x=(-0.08, 0.08),
-                y=(-0.08, 0.08),
+                x=(-0.04, 0.04),
+                y=(-0.04, 0.04),
                 z_rot=(0., 2. * np.pi),
                 # NOTE: hardcoded @self.table_offset since this might be called in init function
-                reference=np.array((0, 0, 0.8)),
+                reference=np.array((-0.4, 0, 0.95)),
             )
             for k in ["cubeA", "cubeB"]
         }
@@ -213,6 +213,7 @@ class Stack_D1(Stack_D0):
         """
         Make default camera have full view of tabletop to account for larger init bounds.
         """
+        camera_pos = ["0.5 0 1.35", "0.5644317865371704 0.4259307086467743 0.4259301424026489 0.56443190574646"]
         mujoco_arena = super()._load_arena()
 
         # Set default agentview camera to be "agentview_full" (and send old agentview camera to agentview_full)
@@ -222,13 +223,13 @@ class Stack_D1(Stack_D0):
         old_agentview_full_camera_pose = (old_agentview_full_camera.get("pos"), old_agentview_full_camera.get("quat"))
         mujoco_arena.set_camera(
             camera_name="agentview",
-            pos=string_to_array(old_agentview_full_camera_pose[0]),
-            quat=string_to_array(old_agentview_full_camera_pose[1]),
+            pos=string_to_array(camera_pos[0]),
+            quat=string_to_array(camera_pos[1]),
         )
         mujoco_arena.set_camera(
             camera_name="agentview_full",
-            pos=string_to_array(old_agentview_camera_pose[0]),
-            quat=string_to_array(old_agentview_camera_pose[1]),
+            pos=string_to_array(camera_pos[0]),
+            quat=string_to_array(camera_pos[1]),
         )
 
         return mujoco_arena
@@ -237,11 +238,11 @@ class Stack_D1(Stack_D0):
         max_dim = 0.20
         return { 
             k : dict(
-                x=(-max_dim, max_dim),
-                y=(-max_dim, max_dim),
+                x=(-0.1, 0.1),
+                y=(-0.15, 0.15),
                 z_rot=(0., 2. * np.pi),
                 # NOTE: hardcoded @self.table_offset since this might be called in init function
-                reference=np.array((0, 0, 0.8)),
+                reference=np.array((-0.4, 0, 0.95)),
             )
             for k in ["cubeA", "cubeB"]
         }
@@ -259,12 +260,12 @@ class Stack_D2(Stack_D1):
         self.cube_colors = ['red', 'green']
         
         self.colors = {
-            'red': (255,0,0),
-            'orange': (255,128,0),
-            'yellow': (255,255,0),
-            'green': (128,255,0),
-            'blue': (0,128,255),
-            'purple': (128,0,255),
+            'red': np.array([255,0,0]),
+            'orange': np.array([255,128,0]),
+            'yellow': np.array([255,255,0]),
+            'green': np.array([128,255,0]),
+            'blue': np.array([0,128,255]),
+            'purple': np.array([128,0,255]),
         }
         
         self.instruction_desc = {
@@ -319,11 +320,9 @@ class Stack_D2(Stack_D1):
     def randomize_colors(self):
         mod = TextureModder(self.sim, geom_names=self.cube_names + [x + '_vis' for x in self.cube_names])
         self.cube_colors = random.sample(self.colors.keys(), 2)
-
         for i, cube_name in enumerate(self.cube_names):
-            mod.set_geom_rgb(cube_name, self.colors[self.cube_colors[i]])
+            mod.set_geom_rgb(cube_name, (self.colors[self.cube_colors[i]]))
             mod.set_rgb(cube_name + '_vis', self.colors[self.cube_colors[i]])
-
         #mod.set_rgb('table_visual', (200,200,200))       
             
     def randomize_instruction(self, store=True):
@@ -356,7 +355,7 @@ class Stack_D2(Stack_D1):
         #print(self.sim.model.geom_names)
         self.randomize_colors()
         self.randomize_instruction()
-        print(f"\nInstruction: {self.instruction}")
+        #print(f"\nInstruction: {self.instruction}")
         return self._get_observations(force_update=True)
 
 
@@ -534,8 +533,8 @@ class StackThree(Stack_D0):
         )
         self.cubeC = BoxObject(
             name="cubeC",
-            size_min=[0.02, 0.02, 0.02],
-            size_max=[0.02, 0.02, 0.02],
+            size_min=[0.015, 0.015, 0.015],
+            size_max=[0.015, 0.015, 0.015],
             rgba=[1, 0, 0, 1],
             material=bluewood,
         )
@@ -693,3 +692,137 @@ class StackThree_D1(StackThree_D0):
             )
             for k in ["cubeA", "cubeB", "cubeC"]
         }
+
+class StackThree_D2(StackThree_D1):
+    """
+    在每个回合随机化颜色，并在回合开始时随机化语言指令
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        self.cube_keys = ['A', 'B', 'C']  # 包含三个方块
+        self.cube_names = [f"cube{x}_g0" for x in self.cube_keys]
+        self.cube_colors = ['red', 'green', 'blue']  # 默认颜色为红、绿、蓝
+        
+        self.colors = {
+            'red': (255, 0, 0),
+            'orange': (255, 128, 0),
+            'yellow': (255, 255, 0),
+            'green': (128, 255, 0),
+            'blue': (0, 128, 255),
+            'purple': (128, 0, 255),
+            'black': (12, 12, 12),
+            'gray': (128, 128, 128),
+            'dark gray': (64, 64, 64),
+            'pink': (255, 153, 255),
+            'brown': (153,76,0),
+        }
+        
+        # 新增三块方块的描述
+        self.instruction_desc = {
+            'PICK': [
+                'stack',
+                'place',
+                'put',
+            ],
+            'PLACE': [
+                'on the',
+                'on top of the'
+            ],
+            'NOUN_A': [
+                'block',
+                'cube',
+            ],
+            'NOUN_B': [
+                'block',
+                'cube',
+                'one',
+            ],
+            'A': [
+                'COLOR_A',
+                'COLOR_A',
+                'COLOR_A',
+                'COLOR_A',
+                'COLOR_A',
+                'medium',
+            ],
+            'B': [
+                'COLOR_B',
+                'COLOR_B',
+                'COLOR_B',
+                'COLOR_B',
+                'COLOR_B',
+                'biggest'
+            ],
+            'C': [
+                'COLOR_C',
+                'COLOR_C',
+                'COLOR_C',
+                'COLOR_C',
+                'COLOR_C',
+                'smallest'
+            ]
+        }
+
+        # 默认指令
+        self.instruction = "put the red block on top of the green block, then place the blue block on top"
+        self.instruction_template = "$PICK the $A $NOUN_A $PLACE $B $NOUN_B, then $PICK the $C $NOUN_A $PLACE $A $NOUN_B"
+        self.instruction_templates = [
+            "$PICK the $A $NOUN_A $PLACE $B $NOUN_B, then $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "1. $PICK the $A $NOUN_A $PLACE $B $NOUN_B. 2. $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "$PICK the $A $NOUN_A $PLACE $B $NOUN_B, then $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "1. $PICK the $A $NOUN_A $PLACE $B $NOUN_B. 2. $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "1. $PICK the $A $NOUN_A $PLACE $B $NOUN_B. 2. $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "1. $PICK the $A $NOUN_A $PLACE $B $NOUN_B. 2. $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+            "firstly $PICK the $A $NOUN_A $PLACE $B $NOUN_B, after that $PICK the $C $NOUN_A $PLACE $A $NOUN_B",
+        ]
+        
+    def randomize_colors(self):
+        # 随机选择三种颜色
+        mod = TextureModder(self.sim, geom_names=self.cube_names + [x + '_vis' for x in self.cube_names])
+        self.cube_colors = random.sample(self.colors.keys(), 3)
+
+        for i, cube_name in enumerate(self.cube_names):
+            mod.set_geom_rgb(cube_name, self.colors[self.cube_colors[i]])
+            mod.set_rgb(cube_name + '_vis', self.colors[self.cube_colors[i]])
+        
+
+    def randomize_instruction(self, store=True):
+        instruction = random.sample(self.instruction_templates, 1)[0]
+        instruction_desc = self.randomize_descriptor(self.instruction_desc)
+            
+        for key, value in instruction_desc.items():
+            instruction = instruction.replace(f"${key}", value)
+
+        if store:
+            self.instruction = instruction
+            
+        return instruction
+    
+    def randomize_descriptor(self, desc):
+        if isinstance(desc, dict):
+            return {k: self.randomize_descriptor(v) for k,v in desc.items()}
+        elif not isinstance(desc, list):
+            raise TypeError(f"expected var to be dict or list (was {type(desc)})")
+            
+        val = desc[random.randrange(len(desc))]
+        
+        for i, key in enumerate(self.cube_keys):
+            val = val.replace(f"COLOR_{key}", self.cube_colors[i])
+
+        return val
+
+    def reset(self):
+        obs = super().reset()
+        self.randomize_colors()
+        self.randomize_instruction()
+        return self._get_observations(force_update=True)
+
+class StackThree_D3(StackThree_D2):
+    """
+    在每个回合随机化颜色，并在每帧随机化语言指令
+    """
+    def step(self, action):
+        # 每帧随机化语言指令
+        self.randomize_instruction()
+        return super().step(action)

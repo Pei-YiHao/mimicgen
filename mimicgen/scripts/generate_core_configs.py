@@ -25,20 +25,20 @@ from mimicgen.utils.file_utils import config_generator_to_script_lines
 
 
 # camera settings for collecting observations
-CAMERA_NAMES = ["frontview", "robot0_eye_in_hand"]
-CAMERA_SIZE = (512, 512)
+CAMERA_NAMES = ["agentview", "robot0_eye_in_hand", "sideview"]
+CAMERA_SIZE = (256, 256)
 
 # set path to folder containing src datasets
-SRC_DATA_DIR = f"/data/datasets/mimicgen/source" #os.path.join(mimicgen.__path__[0], "../datasets/source")
+SRC_DATA_DIR = os.path.join(mimicgen.__path__[0], "../datasets/source") #os.path.join(mimicgen.__path__[0], "../datasets/source")
 
 # set base folder for where to copy each base config and generate new config files for data generation
-CONFIG_DIR = f"/data/datasets/mimicgen/core_hd/{CAMERA_SIZE[1]}/config" #"/tmp/core_configs"
+CONFIG_DIR = "/Volumes/gsl/mimicgen/core_configs" #"/tmp/core_configs"
 
 # set base folder for newly generated datasets
-OUTPUT_FOLDER = f"/data/datasets/mimicgen/core_hd/{CAMERA_SIZE[1]}" #"/tmp/core_datasets"
+OUTPUT_FOLDER = "/Volumes/gsl/mimicgen/core_datasets" #"/tmp/core_datasets"
 
 # number of trajectories to generate (or attempt to generate)
-NUM_TRAJ = 100
+NUM_TRAJ = 200
 
 # whether to guarantee that many successful trajectories (e.g. keep running until that many successes, or stop at that many attempts)
 GUARANTEE = True
@@ -101,8 +101,8 @@ def make_generators(base_configs=BASE_CONFIGS, src_data_dir=SRC_DATA_DIR,
             dataset_name="stack",
             generation_path="{}/stack".format(output_folder),
             # task_interface="MG_Stack",
-            tasks=["Stack_D0", "Stack_D1", "Stack_D2", "Stack_D3", "Stack_D4"], 
-            task_names=["D0", "D1", "D2", "D3", "D4"],
+            tasks=["Stack_D3", "Stack_D4"], 
+            task_names=["D3", "D4"],
             select_src_per_subtask=True,
             selection_strategy="nearest_neighbor_object",
             selection_strategy_kwargs=dict(nn_k=3),
@@ -114,8 +114,8 @@ def make_generators(base_configs=BASE_CONFIGS, src_data_dir=SRC_DATA_DIR,
             dataset_name="stack_three",
             generation_path="{}/stack_three".format(output_folder),
             # task_interface="MG_StackThree",
-            tasks=["StackThree_D0", "StackThree_D1"],
-            task_names=["D0", "D1"],
+            tasks=["StackThree_D2", "StackThree_D3"],
+            task_names=["D2", "D3"],
             select_src_per_subtask=True,
             selection_strategy="nearest_neighbor_object",
             selection_strategy_kwargs=dict(nn_k=3),
@@ -140,8 +140,8 @@ def make_generators(base_configs=BASE_CONFIGS, src_data_dir=SRC_DATA_DIR,
             dataset_name="threading",
             generation_path="{}/threading".format(output_folder),
             # task_interface="MG_Threading",
-            tasks=["Threading_D0", "Threading_D1", "Threading_D2"],
-            task_names=["D0", "D1", "D2"],
+            tasks=["Threading_D3"],
+            task_names=["D3"],
             select_src_per_subtask=False,
             selection_strategy="random",
             selection_strategy_kwargs=None,
@@ -166,8 +166,8 @@ def make_generators(base_configs=BASE_CONFIGS, src_data_dir=SRC_DATA_DIR,
             dataset_name="coffee",
             generation_path="{}/coffee".format(output_folder),
             # task_interface="MG_Coffee",
-            tasks=["Coffee_D0", "Coffee_D1", "Coffee_D2"],
-            task_names=["D0", "D1", "D2"],
+            tasks=["Coffee_O1"],
+            task_names=["O1"],
             select_src_per_subtask=False,
             selection_strategy="random",
             selection_strategy_kwargs=None,
@@ -179,8 +179,8 @@ def make_generators(base_configs=BASE_CONFIGS, src_data_dir=SRC_DATA_DIR,
             dataset_name="coffee_preparation",
             generation_path="{}/coffee_preparation".format(output_folder),
             # task_interface="MG_CoffeePreparation",
-            tasks=["CoffeePreparation_D0", "CoffeePreparation_D1"],
-            task_names=["D0", "D1"],
+            tasks=["CoffeePreparation_O1"],
+            task_names=["O1"],
             select_src_per_subtask=False,
             selection_strategy="random",
             selection_strategy_kwargs=None,
@@ -232,8 +232,8 @@ def make_generators(base_configs=BASE_CONFIGS, src_data_dir=SRC_DATA_DIR,
             dataset_name="mug_cleanup",
             generation_path="{}/mug_cleanup".format(output_folder),
             # task_interface="MG_MugCleanup",
-            tasks=["MugCleanup_D0", "MugCleanup_D1", "MugCleanup_O1", "MugCleanup_O2"],
-            task_names=["D0", "D1", "O1", "O2"],
+            tasks=["MugCleanup_O3"],
+            task_names=["O3"],
             select_src_per_subtask=False,
             selection_strategy="random",
             selection_strategy_kwargs=None,
