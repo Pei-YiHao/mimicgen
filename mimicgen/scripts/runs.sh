@@ -1,0 +1,22 @@
+[
+    #"python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_stack_task_D3.json --auto-remove-exp",
+    #"python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_stack_task_D4.json --auto-remove-exp",
+    #"python generate_dataset.py --config /Volumes/gsl/mimicgen/core_configs/demo_src_stack_three_task_D2.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_stack_three_task_D3.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_square_task_D0.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_square_task_D1.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_square_task_D2.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_threading_task_D3.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_three_piece_assembly_task_D0.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_three_piece_assembly_task_D1.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_three_piece_assembly_task_D2.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_coffee_task_O1.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_coffee_preparation_task_O1.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_nut_assembly_task_D0.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_pick_place_task_D0.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_hammer_cleanup_task_D0.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_hammer_cleanup_task_D1.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_mug_cleanup_task_O3.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_kitchen_task_D0.json --auto-remove-exp",
+    "python3 -m mimicgen.scripts.generate_dataset --config /Volumes/gsl/mimicgen/core_configs/demo_src_kitchen_task_D1.json --auto-remove-exp"
+]

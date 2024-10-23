@@ -79,13 +79,14 @@ if __name__ == "__main__":
         control_freq=20,
     )
     env.reset()
-    env.viewer.set_camera(camera_id=0)
+    env.viewer.set_camera(camera_id=4)
 
     # Get action limits
     low, high = env.action_spec
-
+    import time
     # do visualization
     for i in range(10000):
-        action = np.random.uniform(low, high)
+        action = [0,0,0,0,0,1,0]
         obs, reward, done, _ = env.step(action)
         env.render()
+        time.sleep(1)

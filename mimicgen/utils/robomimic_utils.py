@@ -79,7 +79,7 @@ def create_env(
     if gripper is not None:
         # for now, only support this argument for robosuite environments
         assert EnvUtils.is_robosuite_env(env_meta)
-        assert gripper in ["PandaGripper", "RethinkGripper", "Robotiq85Gripper", "Robotiq140Gripper", "Mycobot280_gripper"]
+        assert gripper in ["PandaGripper", "RethinkGripper", "Robotiq85Gripper", "Robotiq140Gripper", "Mycobot280_gripper","MycobotParallelGripper"]
         env_meta["env_kwargs"]["gripper_types"] = [gripper]
 
     if camera_names is None:

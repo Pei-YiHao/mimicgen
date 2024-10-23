@@ -145,8 +145,8 @@ class Stack_D0(Stack, SingleArmEnv_MG):
         )
         self.cubeA = BoxObject(
             name="cubeA",
-            size_min=[0.008, 0.008, 0.008],
-            size_max=[0.008, 0.008, 0.008],
+            size_min=[0.006, 0.006, 0.008],
+            size_max=[0.006, 0.006, 0.008],
             rgba=[1, 0, 0, 1],
             material=redwood,
         )
@@ -213,7 +213,7 @@ class Stack_D1(Stack_D0):
         """
         Make default camera have full view of tabletop to account for larger init bounds.
         """
-        camera_pos = ["0.5 0 1.35", "0.5644317865371704 0.4259307086467743 0.4259301424026489 0.56443190574646"]
+        camera_pos = ["0.09 0 1.15", "0.5846 0.3977 0.3977 0.5846"]
         mujoco_arena = super()._load_arena()
 
         # Set default agentview camera to be "agentview_full" (and send old agentview camera to agentview_full)
