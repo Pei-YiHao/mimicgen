@@ -29,13 +29,13 @@ CAMERA_NAMES = ["agentview", "robot0_eye_in_hand", "sideview"]
 CAMERA_SIZE = (256, 256)
 
 # set path to folder containing src datasets
-SRC_DATA_DIR = os.path.join(mimicgen.__path__[0], "../datasets/source") #os.path.join(mimicgen.__path__[0], "../datasets/source")
+SRC_DATA_DIR = "/data2/peiyh/openvla-mimic/mimicgen/datasets/source" #os.path.join(mimicgen.__path__[0], "../datasets/source")
 
 # set base folder for where to copy each base config and generate new config files for data generation
-CONFIG_DIR = "/Volumes/gsl/mimicgen/core_configs" #"/tmp/core_configs"
+CONFIG_DIR = "/data2/peiyh/openvla-mimic/data/core_configs" #"/tmp/core_configs"
 
 # set base folder for newly generated datasets
-OUTPUT_FOLDER = "/Volumes/gsl/mimicgen/core_datasets" #"/tmp/core_datasets"
+OUTPUT_FOLDER = "/data2/peiyh/openvla-mimic/data/core_datasets" #"/tmp/core_datasets"
 
 # number of trajectories to generate (or attempt to generate)
 NUM_TRAJ = 200
@@ -179,8 +179,8 @@ def make_generators(base_configs=BASE_CONFIGS, src_data_dir=SRC_DATA_DIR,
             dataset_name="coffee_preparation",
             generation_path="{}/coffee_preparation".format(output_folder),
             # task_interface="MG_CoffeePreparation",
-            tasks=["CoffeePreparation_O1"],
-            task_names=["O1"],
+            tasks=["CoffeePreparation_O0", "CoffeePreparation_O1"],
+            task_names=["O0", "O1"],
             select_src_per_subtask=False,
             selection_strategy="random",
             selection_strategy_kwargs=None,

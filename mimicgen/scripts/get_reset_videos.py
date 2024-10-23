@@ -19,7 +19,7 @@ import mimicgen
 
 
 # base output folder
-OUTPUT_FOLDER = "/Volumes/gsl/mimicgen/reset_videos"
+OUTPUT_FOLDER = "/data2/peiyh/openvla-mimic/data/reset_videos"
 
 # number of resets to view per task
 NUM_RESETS = 10

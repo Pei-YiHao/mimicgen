@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Store commands used to prepare source datasets for each environment.
-DATA=/Users/msv.sat/Desktop/mimicgen-openvla/mimicgen/datasets/source
+DATA=/data2/peiyh/openvla-mimic/mimicgen/datasets/source
 
 # coffee
 python prepare_src_dataset.py \
